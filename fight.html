@@ -1,0 +1,2365 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%A5%8A%3C/text%3E%3C/svg%3E">
+<title>子豪快打 · ZIHAO FIGHT</title>
+<style>
+:root{--bg:#08070a;--ink:#efe9e2;--dim:#8b8290;--gold:#e0b352;--line:#2a2530}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font:14px/1.5 "PingFang SC","Microsoft YaHei",system-ui,sans-serif;overflow:hidden}
+.fit{position:fixed;inset:0;display:grid;place-items:center;padding:10px}
+.box{position:relative;width:min(100%,calc((100vh - 20px) * 16 / 9));aspect-ratio:16/9;
+  background:#000;border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 24px 80px #000c}
+canvas#game{position:relative;z-index:2;display:block;width:100%;height:100%}
+canvas#game3d{position:absolute;inset:0;z-index:1;width:100%;height:100%;display:block}
+.ov{position:absolute;inset:0;z-index:10;display:grid;place-items:center;overflow:auto;
+  background:radial-gradient(70% 70% at 50% 45%,#0a0810ee,#000f);transition:opacity .2s}
+.ov.hide{opacity:0;pointer-events:none}
+.card{display:inline-block;text-align:center;max-width:92%;padding:14px 0}
+.logo{font-size:clamp(28px,5.6vw,58px);font-weight:900;letter-spacing:.1em;line-height:1;
+  background:linear-gradient(180deg,#fff2cf,#e0b352 46%,#a4552a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo small{display:block;font-size:clamp(9px,1vw,12px);letter-spacing:.4em;color:var(--dim);
+  -webkit-text-fill-color:var(--dim);margin-top:9px;font-weight:600}
+.modes{display:flex;gap:11px;justify-content:center;flex-wrap:wrap;margin:22px 0 4px}
+.modes button,.pick button{font:inherit;font-weight:700;font-size:15px;padding:12px 22px;border-radius:9px;cursor:pointer;
+  color:var(--ink);background:#17141c;border:1px solid var(--line);letter-spacing:.05em;transition:.15s}
+.modes button:hover,.pick button:hover{border-color:var(--gold);background:#221d29;transform:translateY(-2px)}
+.modes button.hot{background:linear-gradient(180deg,#e0b352,#a4712a);color:#1a1206;border-color:#f0cf8a}
+.diff{display:flex;gap:6px;justify-content:center;margin-top:13px}
+.diff button{font-size:12px;padding:6px 14px;border-radius:20px;background:transparent;border:1px solid var(--line);
+  color:var(--dim);cursor:pointer}
+.diff button.on{border-color:#4a8fd1;color:#cfe6ff;background:#12233a}
+.diff button:disabled{opacity:.38;cursor:not-allowed;border-style:dashed}
+.keys{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:9px 24px;font-size:12px;color:var(--dim);text-align:left}
+.keys b{color:var(--ink)}
+kbd{background:#1c1922;border:1px solid #3a3342;border-bottom-width:2px;border-radius:4px;padding:0 6px;
+  font:11px/1.6 ui-monospace,monospace;color:#d9d2c8}
+.foot{margin-top:16px;font-size:11px;color:#5d5566}
+.opts{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:15px;flex-wrap:wrap}
+.opts button{font:inherit;font-size:12px;padding:6px 13px;border-radius:8px;cursor:pointer;
+  color:var(--ink);background:#17141c;border:1px solid var(--line);transition:.15s}
+.opts button:hover{border-color:var(--gold);background:#221d29}
+.opts input[type=range]{width:130px;accent-color:var(--gold)}
+.vol{font-size:12px;color:var(--dim);display:flex;align-items:center;gap:7px}
+/* 触屏手柄：只在粗指针设备上出现 */
+.touch{position:absolute;inset:0;z-index:6;display:none;pointer-events:none}
+.touch.on{display:block}
+.touch button{position:absolute;pointer-events:auto;border-radius:50%;border:2px solid #ffffff30;
+  background:#ffffff1c;color:#fff;font:700 15px/1 "PingFang SC",sans-serif;
+  width:56px;height:56px;display:grid;place-items:center;touch-action:none;user-select:none;
+  -webkit-tap-highlight-color:transparent}
+.touch button.act{background:#e0b352bb;transform:scale(.93)}
+.touch .big{width:64px;height:64px;font-size:16px;background:#e0b35233;border-color:#e0b35288}
+.touch .pause{width:38px;height:38px;font-size:13px;top:8px;left:50%;transform:translateX(-50%)}
+@media(max-width:700px){.touch button{width:44px;height:44px;font-size:12px}
+  .touch .big{width:52px;height:52px;font-size:14px}}
+.golink{display:inline-block;margin-top:12px;font-size:12px;color:#e7c98a;text-decoration:none;
+  border:1px solid var(--line);border-radius:999px;padding:6px 15px;background:#141119;transition:.15s}
+.golink:hover{border-color:var(--gold);background:#221c2c;color:#fff}
+/* 选人 */
+#sel h3{margin:0 0 4px;font:900 clamp(18px,2.6vw,28px)/1.2 "PingFang SC",sans-serif;color:#efe9e2;letter-spacing:.1em}
+#sel .who{font-size:12px;color:var(--gold);letter-spacing:.2em}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:16px 0}
+.pc{width:clamp(96px,12vw,132px);background:#100e14;border:1px solid var(--line);border-radius:9px;padding:6px 5px 8px;
+  cursor:pointer;transition:.14s;position:relative}
+.pc:hover{border-color:#5a4f66;transform:translateY(-3px)}
+.pc.c1{border-color:var(--gold);box-shadow:0 0 0 2px #e0b35255,0 8px 22px #0008}
+.pc.c2{border-color:#d1452f;box-shadow:0 0 0 2px #d1452f55,0 8px 22px #0008}
+.pc.both{border-color:#7fd0ff;box-shadow:0 0 0 2px #7fd0ff55}
+.pc canvas{width:100%;height:clamp(72px,9vw,100px);object-fit:contain;display:block;
+  background:radial-gradient(60% 70% at 50% 40%,#1b1722,#0c0a10);border-radius:6px}
+.pc .n{font-size:13px;font-weight:700;margin-top:5px}
+.pc .s{font-size:10px;color:var(--gold);letter-spacing:.04em}
+.pc .t{font-size:10px;color:var(--dim);line-height:1.4}
+.pc .badge{position:absolute;top:-7px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:900;
+  padding:1px 7px;border-radius:9px;background:#e0b352;color:#1a1206;display:none}
+.pc.c1 .badge,.pc.c2 .badge,.pc.both .badge{display:block}
+.pc.c2 .badge{background:#d1452f;color:#fff}
+.pc.both .badge{background:#7fd0ff;color:#08222e}
+.pick{display:flex;gap:10px;justify-content:center;margin-top:6px}
+.pick button{font-size:13px;padding:9px 18px}
+.pick button:disabled{opacity:.35;cursor:default;transform:none}
+.tip{font-size:11px;color:#6d6577;margin-top:10px}
+.pc .req{font-size:9px;color:#e08a5a;line-height:1.3;min-height:12px;margin-top:2px}
+.pc .stat{display:flex;gap:3px;margin-top:5px;padding:0 2px}
+.pc .stat b{flex:1;height:4px;border-radius:2px;background:#2a2530;overflow:hidden}
+.pc .stat b i{display:block;height:100%;background:linear-gradient(90deg,#e0b352,#ff8a6b)}
+.pc.lock{opacity:.45;filter:grayscale(.92);cursor:not-allowed}
+.pc.lock:hover{transform:none;border-color:var(--line);box-shadow:none}
+.pc .lk{position:absolute;left:50%;top:30%;transform:translateX(-50%);font-size:20px;display:none;
+  text-shadow:0 2px 8px #000;pointer-events:none}
+.pc.lock .lk{display:block}
+.pbar{margin-top:14px;font-size:11px;color:#6d6577}
+.pbar b{color:var(--gold)}
+.pbar a{color:#7fd0ff;cursor:pointer;text-decoration:underline;margin-left:10px}
+.unlock{position:absolute;left:50%;top:15%;transform:translateX(-50%);text-align:center;pointer-events:none;
+  opacity:0;transition:opacity .35s}
+.unlock.on{opacity:1}
+.unlock .u1{font-size:12px;letter-spacing:.3em;color:#7fd0ff}
+.unlock .u2{font-size:clamp(22px,3.4vw,38px);font-weight:900;letter-spacing:.08em;
+  background:linear-gradient(180deg,#fff6dd,#e0b352 55%,#a4552a);-webkit-background-clip:text;background-clip:text;color:transparent}
+</style>
+</head>
+<body>
+<div class="fit"><div class="box">
+  <canvas id="game" width="1280" height="720"></canvas>
+
+  <div class="ov" id="menu"><div class="card">
+    <div class="logo">子豪快打<small>ZIHAO FIGHT · 立绘格斗</small></div>
+    <div class="modes">
+      <button id="m2p" class="hot">双人对战</button>
+      <button id="mai">单人挑战 AI</button>
+    </div>
+    <div class="diff" id="diff">
+      <button data-d="0">菜鸟</button><button data-d="1" class="on">普通</button><button data-d="2">地狱</button>
+    </div>
+    <div class="opts">
+      <label class="vol">音量 <input type="range" id="vol" min="0" max="100" value="78"></label>
+      <button id="bmute">🔊 音效开</button>
+      <button id="bfull">⛶ 全屏</button>
+      <button id="b3d">🧊 3D 舞台：关</button>
+    </div>
+    <div class="keys">
+      <div><b>1P（左半场）</b><br>移动 <kbd>A</kbd><kbd>D</kbd> 跳 <kbd>W</kbd> 蹲 <kbd>S</kbd><br>
+        轻拳 <kbd>F</kbd> 重拳 <kbd>G</kbd> 脚 <kbd>V</kbd><br>格挡按住 <kbd>R</kbd> 必杀 <kbd>T</kbd><br>
+        <span style="color:#e0b352">打中人了按 <kbd>G</kbd>/<kbd>T</kbd> 能取消连招</span></div>
+      <div><b>2P（右半场）</b><br>移动 <kbd>←</kbd><kbd>→</kbd> 跳 <kbd>↑</kbd> 蹲 <kbd>↓</kbd><br>
+        轻拳 <kbd>,</kbd> 重拳 <kbd>.</kbd> 脚 <kbd>/</kbd><br>格挡按住 <kbd>RShift</kbd> 必杀 <kbd>'</kbd></div>
+    </div>
+    <div class="foot">选人界面可把任意图片拖到卡上替换角色 · <kbd>Esc</kbd> 暂停 · <kbd>R</kbd> 再来一局 · <kbd>M</kbd> 静音<br>
+      配乐与打击音全部由代码实时合成，页面里没有任何音频文件</div>
+    <a class="golink" href="index.html">🏠 返回首页</a>
+    <div class="pbar" id="pbar"></div>
+  </div></div>
+
+  <div class="unlock" id="unlock"><div class="u1">NEW CHARACTER UNLOCKED</div><div class="u2" id="unlockName"></div></div>
+
+  <div class="ov hide" id="sel"><div class="card">
+    <h3 id="selTitle">选择角色</h3>
+    <div class="who" id="selWho">1P 选择</div>
+    <div class="row" id="pcRow"></div>
+    <div class="pick">
+      <button id="selOk">确认</button><button id="selBack">返回</button>
+    </div>
+    <div class="tip">1P 用 <kbd>A</kbd><kbd>D</kbd> 移动光标 <kbd>F</kbd> 确认 · 2P 用 <kbd>←</kbd><kbd>→</kbd> <kbd>,</kbd> 确认 · 也可鼠标直接点</div>
+  </div></div>
+
+  <div class="ov hide" id="pause"><div class="card">
+    <div class="logo">暂停<small>PAUSED</small></div>
+    <div class="modes">
+      <button id="presume" class="hot">继续</button>
+      <button id="pretry">重新开始</button>
+      <button id="pback">回主菜单</button>
+    </div>
+  </div></div>
+
+  <div class="touch" id="touch">
+    <button class="pause" id="tpause">⏸</button>
+    <button data-k="l" style="left:16px;bottom:88px">◀</button>
+    <button data-k="r" style="left:100px;bottom:88px">▶</button>
+    <button data-k="d" style="left:16px;bottom:20px">蹲</button>
+    <button data-k="u" style="left:100px;bottom:20px">跳</button>
+    <button data-k="lp" style="right:104px;bottom:20px">轻</button>
+    <button data-k="hp" style="right:20px;bottom:20px">重</button>
+    <button data-k="k"  style="right:104px;bottom:92px">脚</button>
+    <button data-k="bl" style="right:20px;bottom:92px">挡</button>
+    <button data-k="sp" class="big" style="right:20px;bottom:168px">杀</button>
+  </div>
+</div></div>
+
+<script src="lib/three.min.js"></script>
+<script>
+/* ==========================================================================
+   子豪快打 —— 静态立绘 + 程序化四肢的横版 1v1
+   配乐/音效：WebAudio Karplus–Strong 弦模型实时合成，不含任何录音素材
+   角色：本地图片，运行时抠底（米色底洪水填充 / 近黑底叠加 / 实景底柔化遮罩）
+   ========================================================================== */
+const cv=document.getElementById('game'), ctx=cv.getContext('2d');
+const W=cv.width, H=cv.height, GROUND=606, WORLD={l:80,r:1200};
+const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
+const ease=t=>1-Math.pow(1-t,3);
+const $=id=>document.getElementById(id);
+
+/* ---------------- 名单 ---------------- */
+/* key: cream=米色底洪水抠图  dark=近黑底叠加合成  vignette=实景底柔化遮罩
+   ax : 身体在取景框里的水平重心（拿刀/伸胳膊的图不是居中） */
+const ROSTER=[
+  {id:'zihao',name:'陈子豪',tag:'666',file:'assets/char-a.webp',crop:{l:42,r:61,t:9,b:91},key:'cream',ax:.5,c:'#f2c200',c2:'#7b5cc4',spd:3.05,jump:15.2,pow:1.00,h:296,atk:'slam',sp:{name:'手枪腿',kind:'fry',su:12,ac:6,rc:26,dmg:5,kb:5},tip:'技巧型 · 肘击膝撞+炸鸡腿'},
+  {id:'hong',name:'小红',tag:'Ω',file:'assets/char-b-cut.webp',crop:{l:0,r:100,t:0,b:100},key:'none',ax:null,c:'#d1452f',c2:'#4fb0c8',spd:2.72,jump:14.0,pow:1.18,h:288,atk:'impact',sp:{name:'反应堆光炮',kind:'beam',su:14,ac:10,rc:24,dmg:12,kb:9},tip:'力量型 · 头槌胸顶+光炮'},
+  {id:'kun',name:'坤坤',tag:'ICBT',file:'assets/char-c-cut.webp',crop:{l:0,r:100,t:0,b:100},key:'none',ax:null,c:'#e08a3c',c2:'#2f333a',spd:3.28,jump:16.4,pow:.92,h:284,atk:'acrobatic',sp:{name:'三分雨',kind:'ball',su:14,ac:8,rc:26,dmg:6,kb:6,bounce:3},tip:'灵巧型 · 劈叉回旋+弹地球'},
+  {id:'suit',name:'西装哥',tag:'LIKE',file:'assets/char-d-cut.webp',crop:{l:0,r:100,t:0,b:100},key:'none',ax:null,c:'#b23a48',c2:'#f0dcae',spd:2.90,jump:14.6,pow:1.05,h:300,atk:'gentleman',sp:{name:'点赞冲击波',kind:'wave',su:13,ac:10,rc:22,dmg:11,kb:10},tip:'远程型 · 双指推+绅士踢+波动'},
+  {id:'cow',name:'奶牛侠',tag:'一刀',file:'assets/char-e-cut.webp',crop:{l:0,r:100,t:0,b:100},key:'none',ax:null,c:'#e6e6e6',c2:'#1b1b1b',spd:2.78,jump:14.2,pow:1.28,h:302,atk:'brute',sp:{name:'拔刀斩',kind:'slash',su:22,ac:12,rc:28,dmg:12,kb:12,reach:.95},tip:'重击型 · 肩撞下劈+超长刀气'}
+];
+/* ---------------- 解锁进度 ---------------- */
+/* req: null=初始  {clear:n}=通关难度n  {all:true}=三个难度全通 */
+const REQ={zihao:null, hong:{clear:0}, kun:{clear:1}, suit:{clear:2}, cow:{all:true}};
+const DIFFS=['菜鸟','普通','地狱'];
+const SAVE='zihaoFight.v1';
+let PROG={cleared:[false,false,false], wins:0, vol:.78, d3:true};
+try{ const s=JSON.parse(localStorage.getItem(SAVE)||'null'); if(s&&Array.isArray(s.cleared)) PROG=Object.assign({d3:true},s); }catch(e){}
+let VOL=(typeof PROG.vol==='number')?PROG.vol:.78, MUTED=!!PROG.muted;
+const applyVol=()=>{ if(master) master.gain.value = MUTED?0:VOL; };
+function save(){ try{ localStorage.setItem(SAVE,JSON.stringify(PROG)); }catch(e){} }
+function unlocked(i){
+  const r=REQ[ROSTER[i].id];
+  if(!r) return true;
+  if(r.all) return PROG.cleared.every(Boolean);
+  return !!PROG.cleared[r.clear];
+}
+function reqText(i){
+  const r=REQ[ROSTER[i].id];
+  if(!r) return '';
+  if(r.all) return '通关全部三个难度';
+  return '通关「'+DIFFS[r.clear]+'」';
+}
+const unlockedIds=()=>ROSTER.map((_,i)=>i).filter(unlocked);
+function recordWin(){
+  const before=unlockedIds().slice();
+  PROG.wins=(PROG.wins||0)+1;
+  PROG.cleared[G.diff]=true;
+  save();
+  const gained=unlockedIds().filter(i=>!before.includes(i));
+  if(gained.length){
+    const el=$('unlock'); el.classList.add('on');
+    $('unlockName').textContent=gained.map(i=>ROSTER[i].name).join(' · ');
+    setTimeout(()=>el.classList.remove('on'),4200);
+    if(ac){ const t=ac.currentTime; strum(t,[62,69,74,79,86],.5,0); thud(t,300,80,.4,.5); }
+  }
+  refreshMenu();
+}
+/* 难度是递进的：先赢「菜鸟」才开「普通」，赢了「普通」才开「地狱」 */
+const diffOpen=d=>d===0||!!PROG.cleared[d-1];
+function refreshMenu(){
+  const btns=[...document.querySelectorAll('#diff button')];
+  btns.forEach(b=>{
+    const d=+b.dataset.d, open=diffOpen(d);
+    b.disabled=!open;
+    b.title=open?'':('先通关「'+DIFFS[d-1]+'」');
+    b.textContent=(PROG.cleared[d]?'✓ ':'')+(open?DIFFS[d]:'🔒 '+DIFFS[d]);
+    b.style.color=PROG.cleared[d]?'#9fe08a':'';
+  });
+  /* 当前选中的难度被锁了就自动退回最高可用档 */
+  const cur=btns.find(b=>b.classList.contains('on'));
+  if(!cur||cur.disabled){
+    let best=0; for(let d=0;d<3;d++) if(diffOpen(d)) best=d;
+    btns.forEach(b=>b.classList.toggle('on',+b.dataset.d===best));
+  }
+  const n=unlockedIds().length;
+  $('pbar').innerHTML=`已解锁 <b>${n}/${ROSTER.length}</b> 名角色 · 累计胜场 <b>${PROG.wins||0}</b>`
+    +` · 通关难度 ${PROG.cleared.filter(Boolean).length}/3`
+    +`<a id="rprog">重置进度</a>`;
+  $('rprog').onclick=e=>{ e.stopPropagation();
+    if(confirm('清空解锁进度和胜场？')){ PROG={cleared:[false,false,false],wins:0}; save(); refreshMenu(); toast('进度已重置'); } };
+}
+
+/* ---------------- 骨架 ----------------
+   照片是死的，但人不能是死的。这里把一张立绘按关节切成 10 块，
+   每块绕自己的关节旋转，父子关系让旋转沿骨链往下传（转大腿，小腿跟着走）。
+
+   关节坐标全部归一化到「裁剪后的立绘」：x 0→1 左到右，y 0→1 头顶到脚底。
+   侧别：0 = 远侧（被身体挡住的那条胳膊/腿，先画），1 = 近侧（朝向镜头，后画）。
+   数据是照着每张立绘的剪影剖面量的，不是拍脑袋。 */
+const RIGS={
+  zihao:{
+    head:[.50,.10], neck:[.50,.15],
+    sh:[[.30,.19],[.70,.19]], el:[[.14,.34],[.86,.34]], ha:[[.07,.49],[.93,.49]],
+    hip:[.50,.53], hp:[[.40,.53],[.60,.53]], kn:[[.33,.75],[.67,.75]], ft:[[.27,.98],[.73,.98]],
+    headR:[.14,.075], torsoW:.17 },
+  hong:{
+    head:[.50,.09], neck:[.50,.15],
+    sh:[[.34,.22],[.66,.22]], el:[[.15,.31],[.85,.31]], ha:[[.03,.40],[.97,.40]],
+    hip:[.50,.52], hp:[[.40,.52],[.60,.52]], kn:[[.28,.73],[.72,.73]], ft:[[.14,.97],[.86,.97]],
+    headR:[.13,.075], torsoW:.15 },
+  kun:{
+    head:[.72,.09], neck:[.62,.16],
+    sh:[[.34,.24],[.70,.22]], el:[[.30,.38],[.74,.36]], ha:[[.32,.48],[.72,.46]],
+    hip:[.50,.55], hp:[[.40,.55],[.60,.55]], kn:[[.26,.76],[.72,.79]], ft:[[.12,.98],[.86,.99]],
+    headR:[.14,.075], torsoW:.15 },
+  suit:{
+    head:[.44,.09], neck:[.44,.14],
+    sh:[[.32,.19],[.60,.19]], el:[[.20,.28],[.82,.26]], ha:[[.06,.32],[.95,.30]],
+    hip:[.50,.50], hp:[[.42,.50],[.58,.50]], kn:[[.36,.75],[.62,.75]], ft:[[.33,.97],[.65,.97]],
+    headR:[.13,.075], torsoW:.15 },
+  cow:{
+    head:[.36,.09], neck:[.34,.13],
+    sh:[[.25,.18],[.45,.17]], el:[[.28,.30],[.49,.28]], ha:[[.17,.38],[.56,.24]],
+    hip:[.31,.52], hp:[[.24,.52],[.38,.52]], kn:[[.20,.73],[.36,.76]], ft:[[.19,.97],[.34,.98]],
+    headR:[.12,.065], torsoW:.13 },
+};
+/* 绘制顺序：远手 → 两条腿 → 躯干 → 头 → 近手。
+   腿全部压在躯干下面，所以抬腿时骨盆那块衣服会盖住大腿根，
+   不会在胯上露出一个洞 —— 这是 2D 切片骨架最省事也最有效的补漏办法。 */
+const RIG_ORDER=['armU0','armF0','legU0','legF0','legU1','legF1','torso','head','armU1','armF1'];
+/* 二维仿射 [a,b,c,d,e,f]：x'=a*x+c*y+e, y'=b*x+d*y+f。
+   自己写而不用 DOMMatrix，是因为每帧要跑几百次矩阵乘法，对象分配太贵。 */
+const AF={
+  mul(m,n){ return [
+    m[0]*n[0]+m[2]*n[1], m[1]*n[0]+m[3]*n[1],
+    m[0]*n[2]+m[2]*n[3], m[1]*n[2]+m[3]*n[3],
+    m[0]*n[4]+m[2]*n[5]+m[4], m[1]*n[4]+m[3]*n[5]+m[5]]; },
+  tr(tx,ty){ return [1,0,0,1,tx,ty]; },
+  /* 绕点 p 转 a 弧度 */
+  rotAbout(px,py,a){
+    const c=Math.cos(a), s=Math.sin(a);
+    return [c,s,-s,c, px-c*px+s*py, py-s*px-c*py]; },
+  ap(m,x,y){ return [m[0]*x+m[2]*y+m[4], m[1]*x+m[3]*y+m[5]]; },
+};
+/* 点到线段的距离（蒙皮权重用） */
+function segDist(px,py,x0,y0,x1,y1){
+  const dx=x1-x0, dy=y1-y0, L=dx*dx+dy*dy;
+  let t = L>0 ? ((px-x0)*dx+(py-y0)*dy)/L : 0;
+  t=clamp(t,0,1);
+  const qx=x0+dx*t, qy=y0+dy*t;
+  return Math.hypot(px-qx,py-qy);
+}
+/* 把立绘铺成一张网格，每个顶点挂到最近的骨头段上做自动蒙皮。
+   骨头一动，网格连着照片一起形变 —— 没有切口，只有拉伸。
+   6×10 是试出来的：再细一点网格线会浮出来，再粗一点关节弯折会变方。 */
+const MESH_COLS=6, MESH_ROWS=10;
+function buildRig(sp,rg){
+  const W=sp.w, H=sp.h;
+  const x0=p=>p[0]*W, y0=p=>p[1]*H;
+  /* 骨头段（静息姿态）。名字和 bonePose 返回的角度一一对应 */
+  const segs=[
+    ['torso', rg.hip,   rg.neck],
+    ['head',  rg.neck,  rg.head],
+    ['armU0', rg.sh[0], rg.el[0]], ['armF0', rg.el[0], rg.ha[0]],
+    ['armU1', rg.sh[1], rg.el[1]], ['armF1', rg.el[1], rg.ha[1]],
+    ['legU0', rg.hp[0], rg.kn[0]], ['legF0', rg.kn[0], rg.ft[0]],
+    ['legU1', rg.hp[1], rg.kn[1]], ['legF1', rg.kn[1], rg.ft[1]],
+  ].map(a=>({n:a[0], px:x0(a[1]), py:y0(a[1]), x1:x0(a[2]), y1:y0(a[2])}));
+  const parent={head:'torso', torso:null,          /* 腿挂在根上：弯腰时上半身转，腿不跟着扭 */
+    armU0:'torso', armF0:'armU0', armU1:'torso', armF1:'armU1',
+    legU0:null, legF0:'legU0', legU1:null, legF1:'legU1'};
+
+  /* 每根骨头先划一个「影响范围」（就是它那条线段外扩一圈）。
+     只按直线距离分配权重不行：立绘很窄的时候，手臂骨和躯干骨离同一个顶点一样近，
+     转个胳膊整块胸腔跟着胀起来。所以权重 = 距离衰减 × 范围门控。
+     范围外不是一刀切，越远越快地衰减，接缝处才是平滑过渡。 */
+  /* 影响范围按部位给，不是无脑外扩：
+     · 躯干：脖子→胯，不许高过脖子（否则头会被躯干抢走，头就不动了）
+     · 头：头顶到脖子下面一点点
+     · 手臂/腿：各自骨段外扩一小圈，刚好盖住自己那截肢体 */
+  for(const seg of segs){
+    let bx0,by0,bx1,by1;
+    const a=Math.min(seg.px,seg.x1), b=Math.max(seg.px,seg.x1);
+    const c=Math.min(seg.py,seg.y1), d=Math.max(seg.py,seg.y1);
+    if(seg.n==='torso'){ bx0=a-.15*W; bx1=b+.15*W; by0=c;          by1=d+.09*H; }
+    else if(seg.n==='head'){ bx0=a-.13*W; bx1=b+.13*W; by0=0;      by1=d+.05*H; }
+    else if(seg.n[0]==='a'){ bx0=a-.065*W; bx1=b+.065*W; by0=c-.055*H; by1=d+.055*H; }
+    else { bx0=a-.07*W; bx1=b+.07*W; by0=c-.05*H; by1=d+.05*H; }
+    seg.bx0=bx0; seg.by0=by0; seg.bx1=bx1; seg.by1=by1;
+  }
+  const boxDist=(bx0,by0,bx1,by1,x,y)=>{
+    const dx=Math.max(bx0-x,0,x-bx1), dy=Math.max(by0-y,0,y-by1);
+    return Math.hypot(dx,dy);
+  };
+  const V=[], fall=H*.050, soft=H*.030;
+  for(let r=0;r<=MESH_ROWS;r++) for(let c=0;c<=MESH_COLS;c++){
+    const x=W*c/MESH_COLS, y=H*r/MESH_ROWS;
+    const cand=segs.map(s=>{
+      const d=segDist(x,y,s.px,s.py,s.x1,s.y1)/fall;
+      const q=boxDist(s.bx0,s.by0,s.bx1,s.by1,x,y)/soft;
+      return {n:s.n, w:1/(d*d*d+q*q+1)};
+    }).sort((a,b)=>b.w-a.w).slice(0,3);
+    const sum=cand.reduce((a,b)=>a+b.w,0);
+    for(const k of cand) k.w/=sum;
+    V.push({x,y,wt:cand});
+  }
+  const T=[];
+  for(let r=0;r<MESH_ROWS;r++) for(let c=0;c<MESH_COLS;c++){
+    const i0=r*(MESH_COLS+1)+c, i1=i0+1, i2=i0+MESH_COLS+1, i3=i2+1;
+    T.push([i0,i1,i2],[i1,i3,i2]);
+  }
+  /* 白色剪影：画受击闪白用 */
+  const wc=document.createElement('canvas'); wc.width=W; wc.height=H;
+  const wg=wc.getContext('2d');
+  wg.drawImage(sp.canvas,0,0);
+  wg.globalCompositeOperation='source-in';
+  wg.fillStyle='#fff'; wg.fillRect(0,0,W,H);
+
+  /* 校准：记录每根肢体的静止绝对角度（弧度）。
+     攻击时不是统一转固定角度，而是"从静止转到目标方向"，
+     这样不同站姿的角色出拳都能打到对面脸上而不是肚子。 */
+  const restAng={};
+  const ang=(a,b)=>Math.atan2(b[1]*H-a[1]*H, b[0]*W-a[0]*W);
+  restAng.armU0=ang(rg.sh[0],rg.el[0]); restAng.armF0=ang(rg.el[0],rg.ha[0]);
+  restAng.armU1=ang(rg.sh[1],rg.el[1]); restAng.armF1=ang(rg.el[1],rg.ha[1]);
+  restAng.legU0=ang(rg.hp[0],rg.kn[0]); restAng.legF0=ang(rg.kn[0],rg.ft[0]);
+  restAng.legU1=ang(rg.hp[1],rg.kn[1]); restAng.legF1=ang(rg.kn[1],rg.ft[1]);
+
+  sp.rig={V,T,segs,parent,def:rg,white:wc,restAng};
+}
+
+/* 每根骨头当前的角度（弧度）。正负号约定：
+   肢体默认朝下，正角把它往身后拧、负角往身前甩（角色在本体坐标里永远面朝 +x）。
+   近侧 = 1 = 朝向镜头的胳膊/腿。 */
+function bonePose(f,P,rg){
+  const m=f.mv?f.curMove():null;
+  const br=Math.sin(f.anim*.075);
+  const A={
+    head:br*.03, torso:0, hipDrop:0,
+    armU:[.12+br*.03,.12-br*.03], armF:[.18+br*.03,.18-br*.03],
+    legU:[0,0], legF:[0,0],
+  };
+  const walking = f.onGround && !f.mv && f.stun<=0 && !f.crouch && Math.abs(f.vx)>.35;
+  if(walking){
+    const ph=f.anim*.16;
+    const s=Math.sin(ph), c=Math.cos(ph);
+    A.legU=[-.60*s, .60*s];
+    A.legF=[.10+Math.max(0,-s)*.95, .10+Math.max(0,s)*.95];
+    A.armU=[.12+.40*s, .12-.40*s];
+    A.armF=[.20+Math.max(0,s)*.55, .20+Math.max(0,-s)*.55];
+    A.torso=-.05; A.head=-.02;
+  }
+  if(f.crouch){
+    A.torso=-.16; A.head=.08;
+    A.legU=[-.80,-.68]; A.legF=[1.24,1.12];
+    A.armU=[.34,.34]; A.armF=[.55,.55];
+  }
+  if(!f.onGround){
+    A.legU=[-.60,-.22]; A.legF=[1.05,.62];
+    A.armU=[.55,.45]; A.armF=[.60,.55]; A.torso=.04;
+  }
+  if(f.block){
+    A.armU=[-.80,-.86]; A.armF=[1.62,1.68]; A.torso=.07; A.legU=[-.12,-.12]; A.legF=[.22,.22];
+  }
+  if(m){
+    const e=P.ext, sk=m.skind;
+    const isCrouch = f.mv.startsWith('c');
+    const isJump   = f.mv.startsWith('j');
+    const ra = rg ? rg.restAng : null;
+    const atk = f.st.atk || 'slam';
+
+    /* ★ 骨骼校准核心：不是"转固定角度"，而是"转到目标方向"。
+       每个角色的骨骼静止角度不同，所以旋转量也不同。
+       目标方向用绝对角度（弧度），负数=朝对手方向。 */
+    const cal = (bone, targetAbs) => {
+      if(!ra) return 0;
+      const rest = ra[bone] || 0;
+      /* 限制最大偏移 ±0.65 rad(37°)：外八站姿的角色(小红腿60°)如果硬转到水平，
+         要转74°，网格直接撕裂。宁可踢不到位也不能把身体拉成一团。 */
+      return clamp(targetAbs - rest, -.65, .65);
+    };
+
+    /* 出拳/踢腿时，手臂/腿应该指向目标方向（接近水平），
+       而不是从静止姿态转固定角度然后停在肚子位置。 */
+
+    if(isCrouch){
+      A.hipDrop += .06;
+      /* ---- 蹲攻按角色风格 ---- */
+      if(atk==='slam'){        /* 陈子豪：低位肘击 */
+        A.armU[1] = cal('armU1', -.3) * e;
+        A.armF[1] = cal('armF1', -.15) * e;
+        A.torso=-.02*e; A.head=-.03*e;
+      }
+      else if(atk==='impact'){ /* 小红：低头冲撞 */
+        A.head = .18*e; A.torso = .08*e;  /* 头往前顶 */
+        A.armU=[.15,-.05]; A.armF=[.25,.10];
+      }
+      else if(atk==='acrobatic'){ /* 坤坤：扫堂腿 */
+        const t=P.legExt;
+        A.legU[1] = cal('legU1', -.4) * t;
+        A.legF[1] = cal('legF1', -.15) * t;
+        A.legU[0]=.06; A.legF[0]=.10;
+        A.torso=.04*t;
+      }
+      else if(atk==='gentleman'){ /* 西装哥：鞠躬上勾 */
+        A.armU[1] = cal('armU1', -.25) * e;
+        A.armF[1] = cal('armF1', -.35) * e;  /* 前臂往上勾 */
+        A.torso=-.04*e;
+      }
+      else {                     /* 奶牛侠：低横扫 */
+        A.armU[1] = cal('armU1', -.2) * e;
+        A.armF[1] = cal('armF1', -.1) * e;
+        A.torso=-.03*e;
+      }
+      /* 稳下半身 */
+      A.legU = A.legU.map((v,i)=>i===1?v:v*.5);
+      A.legF = A.legF.map((v,i)=>i===1?v:v*.5);
+    }
+    else if(isJump){
+      /* ---- 跳攻按角色风格 ---- */
+      if(atk==='slam'){         /* 陈子豪：空中灌篮扣杀 */
+        A.armU[1] = cal('armU1', -.7) * e;   /* 手臂高举过头顶再砸 */
+        A.armF[1] = cal('armF1', -.5) * e;
+        A.torso=-.06*e;
+        A.legU=[-.2,-.08]; A.legF=[.45,.28];
+      }
+      else if(atk==='impact'){  /* 小红：坠地砸 */
+        A.head=.1*e; A.torso=.12*e;  /* 整体前倾压下去 */
+        A.armU=[.2,-.1]; A.armF=[.3,.15];
+        A.legU=[-.25,-.1]; A.legF=[.5,.3];
+      }
+      else if(atk==='acrobatic'){ /* 坤坤：空中回旋踢 */
+        const t=P.legExt;
+        A.legU[1] = cal('legU1', -.55) * t;
+        A.legF[1] = cal('legF1', -.3) * t;
+        A.legU[0]=.15; A.legF[0]=.2;
+        A.torso=-.08*t;
+      }
+      else if(atk==='gentleman'){ /* 西装哥：下劈踢 */
+        const t=P.legExt;
+        A.legU[1] = cal('legU1', -.45) * t;
+        A.legF[1] = cal('legF1', -.2) * t;
+        A.legU[0]=.1; A.legF[0]=.15;
+        A.torso=-.03*t;
+      }
+      else {                     /* 奶牛侠：空中下劈 */
+        A.armU[1] = cal('armU1', -.5) * e;
+        A.armF[1] = cal('armF1', -.35) * e;
+        A.torso=-.08*e;
+        A.legU=[-.3,-.1]; A.legF=[.55,.32];
+      }
+    }
+    else if(m.kind==='kick'){
+      const t=P.legExt;
+      /* ---- 站踢按角色风格 ---- */
+      if(atk==='slam'){          /* 陈子豪：膝撞（短促上顶） */
+        A.legU[1] = cal('legU1', -.35) * t;
+        A.legF[1] = cal('legF1', -.55) * t;  /* 小腿收起再弹 */
+        A.legU[0]=.08; A.legF[0]=.12;
+        A.torso=.06*t;
+      }
+      else if(atk==='impact'){   /* 小红：机甲冲撞（不用腿！）
+        她的腿静止姿态外八66°，硬转到水平要转37°+，网格必撕裂、
+        髋部补偿会让身体整个塌下去。所以她的"踢"就是整个身体撞过去。 */
+        A.torso=.14*t; A.head=.1*t;      /* 上半身连头一起压过去 */
+        A.armU=[.24*t,-.02]; A.armF=[.3*t,.06];  /* 手臂后收蓄势 */
+        A.legU[1]=-.1*t; A.legF[1]=.12*t;  /* 后腿微蹬，幅度极小 */
+        A.legU[0]=.04; A.legF[0]=.06;
+      }
+      else if(atk==='acrobatic'){ /* 坤坤：劈叉侧踢（最夸张） */
+        A.legU[1] = cal('legU1', -.65) * t;   /* 腿几乎打横 */
+        A.legF[1] = cal('legF1', -.1) * t;
+        A.legU[0]=.12; A.legF[0]=.18;
+        A.torso=.1*t; A.armU=[.3,-.25];
+      }
+      else if(atk==='gentleman'){ /* 西装哥：绅士前踢 */
+        A.legU[1] = cal('legU1', -.3) * t;
+        A.legF[1] = cal('legF1', -.15) * t;
+        A.legU[0]=.08; A.legF[0]=.12;
+        A.torso=.04*t;
+      }
+      else {                     /* 奶牛侠：重踩 */
+        A.legU[1] = cal('legU1', -.15) * t;   /* 不高，但很有分量 */
+        A.legF[1] = cal('legF1', -.08) * t;
+        A.legU[0]=.06; A.legF[0]=.1;
+        A.torso=.06*t;
+      }
+    }
+    else if(sk==='slash'){
+      /* 奶牛侠拔刀斩：手臂大幅度挥砍 */
+      A.armU[1] = cal('armU1', -.45) * e;
+      A.armF[1] = cal('armF1', -.2) * e;
+      A.armU[0] = cal('armU0', .15) * e;
+      A.armF[0] = cal('armF0', .1) * e;
+      A.torso=-.1+.18*e; A.head=-.02;
+      A.legU=[-.05,-.2]; A.legF=[.12,.32];
+    }
+    else if(sk==='beam'||sk==='wave'){
+      /* 远程类：双手前推 */
+      A.armU[0] = cal('armU0', -.2) * e;
+      A.armF[0] = cal('armF0', -.15) * e;
+      A.armU[1] = cal('armU1', -.2) * e;
+      A.armF[1] = cal('armF1', -.15) * e;
+      A.torso=-.02*e; A.legU=[-.03,-.07]; A.legF=[.06,.15];
+    }
+    else {
+      /* ---- 站立拳击按角色风格 ---- */
+      if(atk==='slam'){         /* 陈子豪：标准直拳 */
+        A.armU[1] = cal('armU1', -.35) * e;
+        A.armF[1] = cal('armF1', -.12) * e;
+        A.armU[0] = .14*e; A.armF[0] = .2*e;
+        A.torso=-.03*e;
+      }
+      else if(atk==='impact'){  /* 小红：头槌（用头不用手！） */
+        A.head = .22*e;  /* 头大幅前倾 */
+        A.torso = .06*e;
+        A.armU=[.15,-.05]; A.armF=[.22,.1];
+      }
+      else if(atk==='acrobatic'){ /* 坤坤：快刺拳 */
+        A.armU[1] = cal('armU1', -.25) * e;
+        A.armF[1] = cal('armF1', -.08) * e;
+        A.armU[0] = .12*e; A.armF[0] = .18*e;
+        A.torso=-.02*e;
+      }
+      else if(atk==='gentleman'){ /* 西装哥：双指前推 */
+        A.armU[1] = cal('armU1', -.28) * e;
+        A.armF[1] = cal('armF1', -.18) * e;
+        A.armU[0] = cal('armU0', -.15) * e;
+        A.armF[0] = cal('armF0', -.12) * e;
+        A.torso=-.03*e;
+      }
+      else {                     /* 奶牛侠：肩撞 */
+        A.torso = .1*e;  /* 整个身体前倾撞过去 */
+        A.head = .05*e;
+        A.armU=[.2,-.08]; A.armF=[.28,.12];
+      }
+      /* 下半身稳住 */
+      A.legU=[-.04,.02]; A.legF=[.08,.05];
+    }
+  }
+  if(f.stun>0){ const t=Math.min(1,f.stun/8); A.torso+=.28*t; A.head-=.24*t;
+    A.armU=[-.5,.5]; A.armF=[.5,.5]; }
+  if(f.dead){ A.torso+=.18; A.head-=.34; A.armU=[1.15,1.25]; A.armF=[.18,.10];
+    A.legU=[-.22,-.10]; A.legF=[.62,.42]; }
+  if(G.state==='over' && !f.dead){       /* 赢家举手蹦跶 */
+    const b=Math.sin(performance.now()/110);
+    A.armU=[-2.35+b*.18,-2.35-b*.18]; A.armF=[.42,.42];
+    A.legU=[-.05,.05]; A.legF=[.12,.18]; A.head=b*.05;
+  }
+  if(rg&&rg.def){                         /* 腿折起来多少，胯就往下沉多少，脚才不会离地 */
+    const d=rg.def;
+    const L1=d.kn[1][1]-d.hp[1][1], L2=d.ft[1][1]-d.kn[1][1];
+    const t=A.legU[1], k=A.legF[1];
+    A.hipDrop=Math.max(0,(L1+L2)-(L1*Math.cos(t)+L2*Math.cos(t+k)));
+  }
+  return A;
+}
+function boneMatrices(rg,A){
+  /* bonePose 给的是 armU:[远,近] 这样的成对角度，这里翻译成每根骨头的角度 */
+  const ang=n=>{
+    if(n==='torso'||n==='head') return A[n]||0;
+    const k=/^(armU|armF|legU|legF)(\d)$/.exec(n);
+    return k ? (A[k[1]][+k[2]]||0) : 0;
+  };
+  /* 每根骨头：绕自己的关节转，再乘上父骨头的矩阵 */
+  const M={};
+  for(const seg of rg.segs){
+    const local=AF.rotAbout(seg.px, seg.py, ang(seg.n));
+    const p=rg.parent[seg.n];
+    M[seg.n] = p ? AF.mul(M[p], local) : local;
+  }
+  return M;
+}
+/* 骨头末端（手/脚）形变后落在角色局部的哪个位置，用来画命中特效 */
+function rigTip(sp,f,P,A,name){
+  const rg=sp.rig; if(!rg) return null;
+  const M=boneMatrices(rg,A);
+  const seg=rg.segs.find(s=>s.n===name); if(!seg) return null;
+  const m=M[name], s=(f.h*P.sy)/sp.h;
+  return { x:((m[0]*seg.x1+m[2]*seg.y1+m[4]) - sp.ax*sp.w)*s*P.sx,
+           y:((m[1]*seg.x1+m[3]*seg.y1+m[5]) - sp.h)*s*P.sy + A.hipDrop*f.h };
+}
+function drawMesh(f,sp,P,A,tex){
+  const rg=sp.rig; if(!rg) return;
+  const CTM=ctx.getTransform();
+  const s=(f.h*P.sy)/sp.h;
+  const drop=A.hipDrop*f.h;
+  const M=boneMatrices(rg,A);
+
+  /* 顶点：混合它挂着的 3 根骨头，得到形变后的位置（立绘坐标 → 角色局部坐标） */
+  const N=rg.V.length, px=new Float32Array(N), py=new Float32Array(N);
+  for(let i=0;i<N;i++){
+    const v=rg.V[i];
+    let X=0,Y=0;
+    for(let k=0;k<v.wt.length;k++){
+      const w=v.wt[k], m=M[w.n];
+      X += (m[0]*v.x + m[2]*v.y + m[4])*w.w;
+      Y += (m[1]*v.x + m[3]*v.y + m[5])*w.w;
+    }
+    px[i]=(X - sp.ax*sp.w)*s*P.sx;
+    py[i]=(Y - sp.h)*s*P.sy + drop;
+    /* 位移钳制：6×10 网格太稀疏，大角度形变会把顶点拉到离原位太远，
+       照片就像被揉成一团。限制每个顶点最多偏离静止位置 18% 的角色尺寸。 */
+    const rx=(X - sp.ax*sp.w)*s - (v.x - sp.ax*sp.w)*s;
+    const ry=(Y - sp.h)*s - (v.y - sp.h)*s;
+    /* 位移钳制：待机 15% 防撕裂，攻击 35% 让手臂/腿能伸出去 */
+    const maxD = f.h * (f.mv ? .35 : .15);
+    const d = Math.hypot(rx, ry);
+    if(d > maxD){ const k = maxD / d; px[i] -= rx*(1-k); py[i] -= ry*(1-k); }
+  }
+
+  /* 逐三角形贴图：先按目标三角形裁剪，再套一个把纹理映射过去的仿射 */
+  for(let t=0;t<rg.T.length;t++){
+    const a0=rg.T[t][0], a1=rg.T[t][1], a2=rg.T[t][2];
+    const x0=px[a0],y0=py[a0], x1=px[a1],y1=py[a1], x2=px[a2],y2=py[a2];
+    const u0=rg.V[a0].x,v0=rg.V[a0].y, u1=rg.V[a1].x,v1=rg.V[a1].y, u2=rg.V[a2].x,v2=rg.V[a2].y;
+    const det=(u1-u0)*(v2-v0)-(u2-u0)*(v1-v0);
+    if(Math.abs(det)<1e-9) continue;
+    const ma=((x1-x0)*(v2-v0)-(x2-x0)*(v1-v0))/det;
+    const mb=((y1-y0)*(v2-v0)-(y2-y0)*(v1-v0))/det;
+    const mc=((x2-x0)*(u1-u0)-(x1-x0)*(u2-u0))/det;
+    const md=((y2-y0)*(u1-u0)-(y1-y0)*(u2-u0))/det;
+    const me=x0-ma*u0-mc*v0, mf=y0-mb*u0-md*v0;
+    /* 裁剪三角形按质心外扩 1.4%：相邻三角形是分开裁的，
+       不留这点重叠，边上会出现一条发丝一样的缝 */
+    const cx=(x0+x1+x2)/3, cy=(y0+y1+y2)/3, K=1.014;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx+(x0-cx)*K, cy+(y0-cy)*K);
+    ctx.lineTo(cx+(x1-cx)*K, cy+(y1-cy)*K);
+    ctx.lineTo(cx+(x2-cx)*K, cy+(y2-cy)*K);
+    ctx.closePath(); ctx.clip();
+    ctx.transform(ma,mb,mc,md,me,mf);
+    ctx.drawImage(tex,0,0);
+    ctx.restore();
+  }
+  ctx.setTransform(CTM);
+}
+
+/* ---------------- 招式 ---------------- */
+const MOVES={
+  /* 站立 */
+  light:    {dmg:5,  su:5,  ac:4,  rc:7,  reach:.34, kb:2.6, hs:11, bs:7,  met:7,  kind:'punch', sfx:'light'},
+  heavy:    {dmg:12, su:11, ac:5, rc:17, reach:.44, kb:7.5, hs:20, bs:12, met:12, kind:'punch', sfx:'heavy'},
+  kick:     {dmg:9,  su:8,  ac:6, rc:13, reach:.52, kb:5.5, hs:16, bs:10, met:10, kind:'kick',  sfx:'kick'},
+  /* 蹲攻：更快启动、更短收招、距离短、打低段 */
+  clight:   {dmg:4,  su:3,  ac:4, rc:6,  reach:.26, kb:2.0, hs:9,  bs:6,   met:5,  kind:'punch', sfx:'light'},
+  cheavy:   {dmg:14, su:12, ac:5, rc:18, reach:.32, kb:8.0, hs:22, bs:14,  met:14, kind:'punch', sfx:'heavy'},
+  ckick:    {dmg:10, su:7,  ac:6, rc:12, reach:.40, kb:6.0, hs:14, bs:10,  met:9,  kind:'kick',  sfx:'kick'},
+  /* 跳攻：空中出招，落地前生效，落地硬直稍大 */
+  jlight:   {dmg:6,  su:3,  ac:8, rc:10, reach:.38, kb:3.5, hs:10, bs:8,  met:6,  kind:'punch', sfx:'light'},
+  jheavy:   {dmg:14, su:6, ac:6, rc:14, reach:.46, kb:9.0, hs:18, bs:12, met:13, kind:'punch', sfx:'heavy'},
+  jkick:    {dmg:12, su:5,  ac:7, rc:12, reach:.54, kb:7.0, hs:14, bs:10, met:11, kind:'kick',  sfx:'kick'},
+};
+
+/* 每个角色的招式覆盖：不写的字段继承 MOVES 默认值。
+   这样5个人打起来手感完全不同。 */
+const CHAR_MOVES={
+  zihao:{ /* 陈子豪 · 技巧型 —— 极快但伤害偏低，跳攻强（篮球运动员空中优势） */
+    light:{dmg:4,su:4,ac:3,rc:6,reach:.30,kb:2.2},
+    heavy:{dmg:10,su:9,ac:5,rc:15,reach:.40,kb:6.5},
+    kick:{dmg:8,su:7,ac:5,rc:11,reach:.50,kb:5.0},
+    jlight:{dmg:7,su:2,ac:9,reach:.42,kb:4.0},   /* 空中轻拳极快 */
+    jheavy:{dmg:13,su:5,ac:7,reach:.48,kb:8.0},    /* 跳重拳是招牌 */
+    jkick:{dmg:13,su:4,ac:8,reach:.58,kb:7.5},      /* 跳踢最远 */
+  },
+  hong:{  /* 小红 · 力量型 —— 慢但毁灭性，蹲攻是核心（胸口反应堆低姿发射） */
+    light:{dmg:7,su:5,ac:4,rc:7,reach:.32,kb:3.0},   /* 轻拳提速：力量型也得有起手 */
+    heavy:{dmg:16,su:13,ac:5,rc:19,reach:.46,kb:9.5}, /* 重拳更痛 */
+    kick:{dmg:11,su:8,ac:6,rc:13,reach:.50,kb:6.5},
+    clight:{dmg:6,su:3,ac:4,reach:.28,kb:2.5},
+    cheavy:{dmg:19,su:13,ac:5,rc:19,reach:.34,kb:11},  /* 蹲重拳核弹级 */
+    ckick:{dmg:13,su:7,ac:6,reach:.42,kb:7.5},
+    jheavy:{dmg:16,su:6,ac:6,reach:.48,kb:10},         /* 空中重砸：力量型跳攻要有分量 */
+    jkick:{dmg:14,su:5,ac:7,reach:.54,kb:8.0},
+  },
+  kun:{  /* 坤坤 · 灵巧型 —— 全身极速，伤害最低，连招王 */
+    light:{dmg:3,su:3,ac:3,rc:5,reach:.28,kb:1.8},
+    heavy:{dmg:8,su:8,ac:4,rc:13,reach:.38,kb:5.5},
+    kick:{dmg:7,su:6,ac:5,rc:10,reach:.52,kb:4.5},
+    clight:{dmg:3,su:2,ac:3,rc:4,reach:.24,kb:1.5},    /* 蹲轻拳2帧出 */
+    cheavy:{dmg:10,su:9,ac:4,rc:14,reach:.30,kb:6.0},
+    ckick:{dmg:8,su:5,ac:5,rc:9,reach:.40,kb:5.0},
+    jlight:{dmg:4,su:2,ac:10,reach:.36,kb:2.5},
+    jkick:{dmg:10,su:3,ac:8,reach:.56,kb:5.5},        /* 跳踢是他的灵魂 */
+  },
+  suit:{ /* 西装哥 · 远程/控制型 —— 站立攻击距离长，波动+长手压制 */
+    light:{dmg:6,su:4,ac:4,rc:6,reach:.40,kb:3.0},    /* 轻拳更顺手 */
+    heavy:{dmg:13,su:11,ac:5,rc:16,reach:.54,kb:8.0},  /* 重拳更痛，仍超长 */
+    kick:{dmg:10,su:8,ac:6,rc:12,reach:.58,kb:6.0},    /* 踢腿最远且提速 */
+    clight:{dmg:5,su:3,ac:4,reach:.30,kb:2.5},
+    cheavy:{dmg:14,su:10,ac:5,rc:15,reach:.40,kb:8.5},
+    ckick:{dmg:11,su:6,ac:6,reach:.44,kb:6.5},
+    jlight:{dmg:6,su:3,ac:8,reach:.42,kb:3.5},
+    jheavy:{dmg:14,su:6,ac:6,rc:14,reach:.52,kb:9.0},  /* 跳重拳有威胁 */
+    jkick:{dmg:12,su:5,ac:7,reach:.56,kb:7.5},
+  },
+  cow:{  /* 奶牛侠 · 重击型 —— 一刀流，全动作慢但痛 */
+    light:{dmg:7,su:7,ac:5,rc:9,reach:.36,kb:4.0},
+    heavy:{dmg:16,su:14,ac:6,rc:22,reach:.48,kb:10},   /* 重拳巨痛巨慢 */
+    kick:{dmg:11,su:10,ac:7,rc:15,reach:.54,kb:7.0},
+    cheavy:{dmg:22,su:16,ac:6,rc:24,reach:.38,kb:14},  /* 蹲重斩半管血 */
+    jheavy:{dmg:18,su:8,ac:7,rc:16,reach:.50,kb:12},   /* 跳重劈 */
+    jkick:{dmg:14,su:7,ac:8,reach:.56,kb:9.0},
+  },
+};
+
+/* 取角色最终招式：先拷贝默认，再用角色覆盖层合并 */
+function getMove(name,ri){
+  const base={...MOVES[name]};
+  const ov=CHAR_MOVES[ROSTER[ri].id];
+  if(ov && ov[name]) Object.assign(base, ov[name]);
+  return base;
+}
+const KEYMAP=[
+  {l:'KeyA',r:'KeyD',u:'KeyW',d:'KeyS',lp:'KeyF',hp:'KeyG',k:'KeyV',bl:'KeyR',sp:'KeyT'},
+  {l:'ArrowLeft',r:'ArrowRight',u:'ArrowUp',d:'ArrowDown',
+   lp:['Numpad1','Comma'],hp:['Numpad2','Period'],k:['Numpad3','Slash'],
+   bl:['Numpad0','ShiftRight'],sp:['NumpadDecimal','Quote']},
+];
+
+/* ---------------- 立绘管线 ---------------- */
+/* 顺序：先按取景框裁切 → 再抠底 → 最后收紧包围盒。
+   先裁切很关键：洪水的种子要落在取景框边上，否则会被人像外的黑框挡住 */
+function cropTo(img,cr){
+  const iw=img.naturalWidth, ih=img.naturalHeight;
+  const sx=Math.round(iw*cr.l/100), sy=Math.round(ih*cr.t/100);
+  const sw=Math.max(8,Math.round(iw*(cr.r-cr.l)/100)), sh=Math.max(8,Math.round(ih*(cr.b-cr.t)/100));
+  const c=document.createElement('canvas'); c.width=sw; c.height=sh;
+  c.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,sw,sh);
+  return c;
+}
+/* 梯度洪水：只跟随"又亮又平滑"的区域。
+   亮度门槛挡掉中灰衣服（低清照片边缘是柔和过渡，纯梯度会爬进裤子），
+   平滑判据挡掉人物硬边缘 —— 两个条件缺一不可 */
+const BG_LUM=185, BG_STEP=56;
+function floodKey(p,Wd,Hd){
+  const seen=new Uint8Array(Wd*Hd), st=[];
+  const lum=k=>{const i=k*4;return (p[i]+p[i+1]+p[i+2])/3;};
+  const close=(a,b)=>{const i=a*4,j=b*4;
+    return Math.abs(p[i]-p[j])+Math.abs(p[i+1]-p[j+1])+Math.abs(p[i+2]-p[j+2])<BG_STEP;};
+  const put=k=>{ seen[k]=1; st.push(k); };
+  for(let x=0;x<Wd;x++){ if(lum(x)>BG_LUM)put(x); const k=(Hd-1)*Wd+x; if(lum(k)>BG_LUM)put(k); }
+  for(let y=0;y<Hd;y++){ let k=y*Wd; if(lum(k)>BG_LUM)put(k); k=y*Wd+Wd-1; if(lum(k)>BG_LUM)put(k); }
+  while(st.length){ const k=st.pop(), x=k%Wd, y=(k/Wd)|0;
+    const tryP=(n)=>{ if(!seen[n]&&lum(n)>BG_LUM&&close(n,k)) put(n); };
+    if(x>0)tryP(k-1); if(x<Wd-1)tryP(k+1); if(y>0)tryP(k-Wd); if(y<Hd-1)tryP(k+Wd); }
+  /* 贴边那圈是"背景混人物"的中间色，吃掉 1px 再留半透明环，否则暗台上会有一圈光晕 */
+  const r1=new Uint8Array(Wd*Hd), r2=new Uint8Array(Wd*Hd);
+  for(let y=1;y<Hd-1;y++)for(let x=1;x<Wd-1;x++){const k=y*Wd+x;
+    if(seen[k])continue;
+    if(seen[k-1]||seen[k+1]||seen[k-Wd]||seen[k+Wd])r1[k]=1;}
+  for(let y=1;y<Hd-1;y++)for(let x=1;x<Wd-1;x++){const k=y*Wd+x;
+    if(seen[k]||r1[k])continue;
+    if(r1[k-1]||r1[k+1]||r1[k-Wd]||r1[k+Wd])r2[k]=1;}
+  for(let i=0;i<Wd*Hd;i++){
+    if(seen[i]||r1[i]) p[i*4+3]=0;
+    else if(r2[i]) p[i*4+3]=p[i*4+3]*.45|0;
+  }
+}
+/* ---------------- 实景照片自动抠像 ----------------
+   米色棚拍底用洪水就能搞定，但真实照片（房间、街道）不行 —— 那样只能得到一个羽化矩形。
+   这里的做法：
+     1. 缩到 200px 宽，速度优先；
+     2. 边框环采样背景主色、中间块采样人物主色，各跑一次 k-means；
+     3. 每个像素看离哪边的主色更近，判定偏向前景（宁可多留一点人，也别把衣服咬掉一块）；
+     4. 从画面边框洪水 —— 只有"和边框连得通"的背景才算背景；
+     5. 再从边框洪水一次（强前景当墙），淹不到的就是人，顺手把内部的洞和边上的杂点一起清掉；
+     6. 只留最大连通块 → 3×3 羽化 → 放大回原尺寸当遮罩。
+   兜底：如果结果覆盖面积不合理（太小=把人切没了，太大=没切掉），退回老的圆角衰减。 */
+function photoCut(src){
+  const Wf=src.width, Hf=src.height;
+  const SW=Math.min(200,Wf), SH=Math.max(40,Math.round(SW*Hf/Wf));
+  const c=document.createElement('canvas'); c.width=SW; c.height=SH;
+  const g=c.getContext('2d'); g.drawImage(src,0,0,Wf,Hf,0,0,SW,SH);
+  const p=g.getImageData(0,0,SW,SH).data;
+
+  /* 种子只取画面顶边 + 左右两侧的上半段：
+     立绘取景很紧，人物的手和脚会贴到左右/下边缘，整圈采样会把西装本身当成背景 */
+  const seedIdx=[];
+  for(let x=0;x<SW;x++) seedIdx.push(x);
+  const ylim=Math.max(3,Math.round(SH*.36));
+  for(let y=0;y<ylim;y++){ seedIdx.push(y*SW); seedIdx.push(y*SW+SW-1); }
+  const bgS=[];
+  for(let n=0;n<seedIdx.length;n+=2){ const i=seedIdx[n]*4; bgS.push([p[i],p[i+1],p[i+2]]); }
+  const km=(S,k,iters)=>{
+    if(!S.length) return [[128,128,128]];
+    if(S.length<k) return S.slice();
+    const cen=[]; for(let i=0;i<k;i++) cen.push(S[Math.floor(i*S.length/k)].slice());
+    const asg=new Int32Array(S.length).fill(-1);
+    for(let it=0;it<iters;it++){
+      let moved=false;
+      for(let i=0;i<S.length;i++){
+        const s=S[i]; let bi=0,bd=1e18;
+        for(let j=0;j<k;j++){ const cc=cen[j];
+          const d=(s[0]-cc[0])**2+(s[1]-cc[1])**2+(s[2]-cc[2])**2;
+          if(d<bd){bd=d;bi=j;} }
+        if(asg[i]!==bi){asg[i]=bi;moved=true;}
+      }
+      const sum=new Float64Array(k*3), cnt=new Int32Array(k);
+      for(let i=0;i<S.length;i++){ const s=S[i],j=asg[i];
+        sum[j*3]+=s[0]; sum[j*3+1]+=s[1]; sum[j*3+2]+=s[2]; cnt[j]++; }
+      for(let j=0;j<k;j++) if(cnt[j]) cen[j]=[sum[j*3]/cnt[j],sum[j*3+1]/cnt[j],sum[j*3+2]/cnt[j]];
+      if(!moved) break;
+    }
+    return cen;
+  };
+  const cb=km(bgS,4,6);
+  const nearSeed=(r,gg,b)=>{ let m=1e18;
+    for(let j=0;j<cb.length;j++){ const cc=cb[j];
+      const d=Math.abs(r-cc[0])+Math.abs(gg-cc[1])+Math.abs(b-cc[2]); if(d<m)m=d; }
+    return m; };
+
+  /* 区域生长：既要求和相邻像素的色差够小（能顺着地面亮度的渐变爬），
+     又要求离种子主色不太远（防止顺着渐变一路爬进人身上）。
+     硬边（西装的黑边、人像轮廓）两关都过不去，洪水就停住了 */
+  const N=SW*SH, BGm=new Uint8Array(N), st=[];
+  const T1=62, T2=185;
+  for(const i of seedIdx) if(!BGm[i]){ BGm[i]=1; st.push(i); }
+  while(st.length){
+    const i=st.pop(), x=i%SW, r=p[i*4], gg=p[i*4+1], b=p[i*4+2];
+    const tryP=j=>{
+      if(BGm[j]) return;
+      const jr=p[j*4],jg=p[j*4+1],jb=p[j*4+2];
+      if(Math.abs(jr-r)+Math.abs(jg-gg)+Math.abs(jb-b) > T1) return;
+      if(nearSeed(jr,jg,jb) > T2) return;
+      BGm[j]=1; st.push(j);
+    };
+    if(x>0)tryP(i-1); if(x<SW-1)tryP(i+1); if(i>=SW)tryP(i-SW); if(i<N-SW)tryP(i+SW);
+  }
+
+  let mask=new Uint8Array(N), cover=0;
+  for(let i=0;i<N;i++){ if(!BGm[i]){ mask[i]=1; cover++; } }
+  cover/=N;
+  if(cover<.05||cover>.93) return null;
+
+  /* 被前景包住的背景口袋（比如手和身体之间的缝）要填成实心 */
+  const OUT=new Uint8Array(N), q=[];
+  const seed2=i=>{ if(BGm[i]&&!OUT[i]){OUT[i]=1;q.push(i);} };
+  for(let x=0;x<SW;x++){ seed2(x); seed2((SH-1)*SW+x); }
+  for(let y=0;y<SH;y++){ seed2(y*SW); seed2(y*SW+SW-1); }
+  while(q.length){ const i=q.pop(), x=i%SW;
+    if(x>0)seed2(i-1); if(x<SW-1)seed2(i+1); if(i>=SW)seed2(i-SW); if(i<N-SW)seed2(i+SW); }
+  for(let i=0;i<N;i++) if(BGm[i]&&!OUT[i]) mask[i]=1;
+
+  /* 只留最大连通块，去掉零散碎点 */
+  const id=new Int32Array(N).fill(-1); let best=-1,bestN=0,next=0;
+  for(let i=0;i<N;i++){
+    if(!mask[i]||id[i]>=0) continue;
+    const q=[i]; id[i]=next; let n=0;
+    while(q.length){ const j=q.pop(); n++; const x=j%SW;
+      const tryP=k=>{ if(mask[k]&&id[k]<0){ id[k]=next; q.push(k); } };
+      if(x>0)tryP(j-1); if(x<SW-1)tryP(j+1); if(j>=SW)tryP(j-SW); if(j<N-SW)tryP(j+SW); }
+    if(n>bestN){ bestN=n; best=next; }
+    next++;
+  }
+  if(best<0) return null;
+
+  const blur=new Float32Array(N);
+  for(let y=0;y<SH;y++)for(let x=0;x<SW;x++){
+    let s=0,n=0;
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+      const nx=x+dx, ny=y+dy; if(nx<0||ny<0||nx>=SW||ny>=SH) continue;
+      const k=ny*SW+nx; s+=(mask[k]&&id[k]===best)?1:0; n++;
+    }
+    blur[y*SW+x]=s/n;
+  }
+  const mc=document.createElement('canvas'); mc.width=SW; mc.height=SH;
+  const mg=mc.getContext('2d'), md=mg.createImageData(SW,SH);
+  for(let i=0;i<N;i++){ const a=Math.round(blur[i]*255);
+    md.data[i*4]=255; md.data[i*4+1]=255; md.data[i*4+2]=255; md.data[i*4+3]=a; }
+  mg.putImageData(md,0,0);
+  return {mask:mc, cover:cover};
+}
+function softBox(p,Wd,Hd,frac){
+  /* 圆角衰减：把抠不掉的实景边角化进暗背景，而不是露出硬方块 */
+  const f=Math.max(4,Math.round(Math.min(Wd,Hd)*frac));
+  for(let y=0;y<Hd;y++)for(let x=0;x<Wd;x++){
+    const dx=Math.min(x,Wd-1-x), dy=Math.min(y,Hd-1-y);
+    const a=clamp(Math.min(dx,dy)/f,0,1)*clamp((dx+dy)/(f*1.9),0,1);
+    const i=y*Wd+x; p[i*4+3]=p[i*4+3]*a|0;
+  }
+}
+function matte(src,mode){
+  const Wd=src.width, Hd=src.height;
+  const g=src.getContext('2d');
+  if(mode==='dark'){
+    /* 近黑背景：先把黑电平抬到 0，再交给叠加合成，背景加上去严格等于没加 */
+    const d=g.getImageData(0,0,Wd,Hd), q=d.data;
+    for(let i=0;i<q.length;i+=4){
+      q[i]=Math.max(0,q[i]-18); q[i+1]=Math.max(0,q[i+1]-18); q[i+2]=Math.max(0,q[i+2]-18);
+    }
+    g.putImageData(d,0,0); return src;
+  }
+  if(mode==='none') return src;   /* 已经是抠好的透明 PNG，不用再处理 */
+  const d=g.getImageData(0,0,Wd,Hd), p=d.data;
+  if(mode==='auto'){
+    /* 实景照片：走自动抠像。注意这里故意不跑 floodKey ——
+       那套判据会顺带啃掉人物身上的浅色衣服（比如奶牛睡衣的白色） */
+    const res=photoCut(src);
+    if(res){
+      const tmp=document.createElement('canvas'); tmp.width=Wd; tmp.height=Hd;
+      const tg=tmp.getContext('2d'); tg.imageSmoothingEnabled=true;
+      try{ tg.imageSmoothingQuality='high'; }catch(e){}
+      tg.drawImage(res.mask,0,0,Wd,Hd);
+      const m=tg.getImageData(0,0,Wd,Hd).data;
+      for(let i=0;i<Wd*Hd;i++) p[i*4+3]=Math.min(p[i*4+3], m[i*4+3]);
+    } else softBox(p,Wd,Hd,.15);   /* 抠像结果不合理就退回圆角衰减 */
+    g.putImageData(d,0,0); return src;
+  }
+  floodKey(p,Wd,Hd);
+  if(mode==='photo') softBox(p,Wd,Hd,.15);   /* 实景底：梯度抠图 + 圆角衰减双保险 */
+  g.putImageData(d,0,0); return src;
+}
+function trim(src,bodyPx){
+  const Wd=src.width, Hd=src.height;
+  const d=src.getContext('2d').getImageData(0,0,Wd,Hd).data;
+  let x0=Wd,y0=Hd,x1=0,y1=0;
+  for(let y=0;y<Hd;y+=2)for(let x=0;x<Wd;x+=2){ if(d[(y*Wd+x)*4+3]>30){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;} }
+  if(x1<=x0||y1<=y0){x0=0;y0=0;x1=Wd-1;y1=Hd-1;}
+  /* 没给重心就自己算：只统计下半身（腿和胯）的质量中心。
+     招手、举刀、斜着捅出去的剑都会把整体重心带偏，下半身稳得多 */
+  if(bodyPx==null){
+    let sum=0,sx=0;
+    const yMid=(y0+y1)/2;
+    for(let y=Math.max(0,Math.round(yMid));y<=y1;y++)for(let x=x0;x<=x1;x++){
+      const a=d[(y*Wd+x)*4+3]; if(a>40){ sum+=a; sx+=x*a; }
+    }
+    bodyPx = sum? sx/sum : (x0+x1)/2;
+  }
+  const cw=x1-x0+1, ch=y1-y0+1;
+  const o=document.createElement('canvas'); o.width=cw; o.height=ch;
+  o.getContext('2d').drawImage(src,x0,y0,cw,ch,0,0,cw,ch);
+  return {canvas:o,w:cw,h:ch,ar:cw/ch,ax:clamp((bodyPx-x0)/cw,.15,.85)};
+}
+const SPR={};
+function loadChar(i){
+  const s=ROSTER[i];
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{ try{
+        const iw=img.naturalWidth;
+        const bodyPx = (s.ax==null) ? null
+          : (s.crop.l+(s.crop.r-s.crop.l)*s.ax)/100*iw - Math.round(iw*s.crop.l/100);
+        const sp=trim(matte(cropTo(img,s.crop),s.key), bodyPx);
+        sp.additive = s.key==='dark'; sp.name=s.name;
+        if(RIGS[s.id]) buildRig(sp, RIGS[s.id]);
+        SPR[i]=sp; res(true); }
+      catch(e){ SPR[i]=null; res(false); } };
+    img.onerror=()=>{ SPR[i]=null; res(false); };
+    img.src=s.file;
+  });
+}
+
+/* ---------------- 音频 ---------------- */
+let ac=null,master=null,ks=null,noiseBuf=null;
+function makeKS(c,base,dur,damp,blend){
+  const sr=c.sampleRate,L=Math.max(3,Math.round(sr/base)),n=Math.floor(sr*dur);
+  const b=c.createBuffer(2,n,sr);
+  for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch),line=new Float32Array(L);
+    let pv=0; for(let i=0;i<L;i++){const v=Math.random()*2-1;line[i]=blend*v+(1-blend)*pv;pv=v;}
+    let ix=0; for(let i=0;i<n;i++){const cu=line[ix],nx=line[(ix+1)%L];line[ix]=(cu+nx)*.5*damp;d[i]=cu*(1-i/n*.12);ix=(ix+1)%L;}
+    const a=(sr*.0035)|0; for(let i=0;i<a;i++)d[i]+=(1-i/a)*(Math.random()*2-1)*.5;}
+  return b;
+}
+function initAudio(){
+  if(ac) return;
+  ac=new (window.AudioContext||window.webkitAudioContext)();
+  master=ac.createGain(); master.gain.value = MUTED?0:VOL;
+  const comp=ac.createDynamicsCompressor();
+  comp.threshold.value=-16; comp.ratio.value=6; comp.attack.value=.004; comp.release.value=.2;
+  master.connect(comp); comp.connect(ac.destination);
+  ks=makeKS(ac,110,1.9,.9958,.5);
+  noiseBuf=ac.createBuffer(1,ac.sampleRate*.6,ac.sampleRate);
+  const nd=noiseBuf.getChannelData(0); for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
+  mNext=ac.currentTime+.1;
+}
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+function pluck(t,m,v,pan,bright){
+  if(!ac)return; const s=ac.createBufferSource(); s.buffer=ks; s.playbackRate.value=mtof(m)/110;
+  const g=ac.createGain(), hp=ac.createBiquadFilter(), pk=ac.createBiquadFilter(), lp=ac.createBiquadFilter();
+  hp.type='highpass'; hp.frequency.value=90;
+  pk.type='peaking'; pk.frequency.value=1300+bright*1100; pk.Q.value=1.2; pk.gain.value=5.5;
+  lp.type='lowpass'; lp.frequency.value=5600;
+  g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(v*.5,t+.002);
+  g.gain.exponentialRampToValueAtTime(.0009,t+.9);
+  s.connect(g);g.connect(hp);hp.connect(pk);pk.connect(lp);
+  if(ac.createStereoPanner){const p=ac.createStereoPanner();p.pan.value=pan;lp.connect(p);p.connect(master);}
+  else lp.connect(master);
+  s.start(t);s.stop(t+1.05);
+}
+function strum(t,ch,v,pan){ch.forEach((m,i)=>pluck(t+i*.015,m,v*(.5+i*.1),pan,.75));}
+function thud(t,f0,f1,v,dur){
+  if(!ac)return; const o=ac.createOscillator(); o.type='sine';
+  o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f1,t+dur*.7);
+  const g=ac.createGain(); g.gain.setValueAtTime(.0001,t);
+  g.gain.linearRampToValueAtTime(v,t+.005); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t+dur+.02);
+}
+function nz(t,dur,f0,f1,v,type){
+  if(!ac)return; const s=ac.createBufferSource(); s.buffer=noiseBuf;
+  const bp=ac.createBiquadFilter(); bp.type=type||'bandpass'; bp.Q.value=1.1;
+  bp.frequency.setValueAtTime(f0,t); bp.frequency.exponentialRampToValueAtTime(Math.max(40,f1),t+dur);
+  const g=ac.createGain(); g.gain.setValueAtTime(.0001,t);
+  g.gain.linearRampToValueAtTime(v,t+.004); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  s.connect(bp); bp.connect(g); g.connect(master); s.start(t); s.stop(t+dur+.02);
+}
+const SFX={
+  light(){const t=ac.currentTime; nz(t,.09,2600,700,.28); thud(t,190,70,.26,.11); pluck(t,79,.2,-.2,1);},
+  heavy(){const t=ac.currentTime; nz(t,.16,1700,320,.42); thud(t,150,44,.48,.24); pluck(t,67,.32,-.2,1);},
+  kick(){const t=ac.currentTime; nz(t,.13,1100,260,.38); thud(t,120,40,.42,.2);},
+  block(){const t=ac.currentTime; nz(t,.1,4200,2400,.22,'highpass'); pluck(t,88,.18,.2,1);},
+  whiff(){const t=ac.currentTime; nz(t,.12,700,2400,.075);},
+  jump(){const t=ac.currentTime; nz(t,.1,420,1200,.08);},
+  land(){const t=ac.currentTime; thud(t,150,58,.2,.13);},
+  beam(){const t=ac.currentTime; nz(t,.45,3400,500,.22); thud(t,420,90,.3,.4); pluck(t,84,.26,0,1);},
+  wave(){const t=ac.currentTime; nz(t,.5,1600,220,.26); thud(t,240,52,.34,.45);},
+  slash(){const t=ac.currentTime; nz(t,.28,5200,900,.3,'highpass'); thud(t,300,60,.3,.26);},
+  throw(){const t=ac.currentTime; nz(t,.22,600,2200,.14); pluck(t,76,.2,.2,.8);},
+  bounce(){const t=ac.currentTime; thud(t,240,120,.2,.09); nz(t,.05,1800,900,.10);},
+  fry(){const t=ac.currentTime; nz(t,.3,1200,3400,.16); nz(t+.05,.22,3000,800,.12);
+        pluck(t,72,.24,-.2,.9); pluck(t+.09,79,.2,.2,1);},
+  ko(){const t=ac.currentTime; thud(t,110,32,.66,.9); nz(t,.7,900,90,.32); strum(t,[50,53,57,60,65,69,72],.5,0);},
+  super(){const t=ac.currentTime; thud(t,220,40,.55,.5); nz(t,.4,3000,200,.26); strum(t,[50,57,62,65,69,74,77],.5,0);},
+  ui(){const t=ac.currentTime; pluck(t,81,.16,0,.6);},
+  pick(){const t=ac.currentTime; pluck(t,86,.2,0,.8); pluck(t+.07,93,.18,0,.8);},
+};
+/* AudioContext 要等用户手势才建，未就绪时整表静默，避免各处判空 */
+for(const k in SFX){ const fn=SFX[k]; SFX[k]=(...a)=>{ if(ac) fn(...a); }; }
+const RIFF=[[62,0,65,0,67,0,69,0,72,0,69,0,67,0,65,0],
+            [62,0,62,65,67,0,69,0,57,0,60,0,62,0,65,0],
+            [67,0,65,0,62,0,57,0,55,0,57,0,60,0,62,0],
+            [62,0,60,0,57,0,55,0,53,0,50,0,53,0,57,0]];
+const CHORDS=[[50,57,62,65,69],[48,55,60,65,67],[53,60,65,69,72],[50,57,62,67,69]];
+const BPM=150; let mStep=0, mNext=0;
+const mDur=()=>60/BPM/4;
+function musicTick(){
+  if(!ac) return;
+  while(mNext < ac.currentTime+.12){
+    if(G.state!=='menu'&&G.state!=='select'&&G.state!=='pause'){
+      const bar=Math.floor(mStep/16)%4, s=mStep%16, note=RIFF[bar][s];
+      const live=G.f.length&&(G.state==='fight'||G.state==='ko');
+      const hype=live&&(G.f[0].hp<28||G.f[1].hp<28);
+      if(s===0) strum(mNext,CHORDS[bar],hype?.4:.26,0);
+      if(note) pluck(mNext,note+(hype&&s%4===0?12:0),s%4===0?.46:.3,(s%8)/8-.4,hype?1:.6);
+      if(hype&&s>=10) pluck(mNext,RIFF[bar][8]||62,.3,.35,1);
+      if(s===0||s===8) thud(mNext,88,36,hype?.28:.18,.24);
+    }
+    mStep++; mNext+=mDur();
+  }
+}
+
+/* ---------------- 全局 ---------------- */
+const G={state:'menu',prev:'fight',f:[],t:0,round:1,roundT:0,time:3600,wins:[0,0],
+  shake:0,hitstop:0,slow:1,slowT:0,msg:{t:'',s:''},msgT:0,mode:'2p',diff:1,cam:{x:640,z:1},
+  pick:[0,1],lastWin:-1,taken:[0,0],hintT:0};
+let pops=[],dusts=[],spk=[],dmgNums=[],PROJ=[],rings=[],shields=[],comboUI=null,flash=0;
+let banner=null;   /* 必杀技名横幅：有生命周期，打完自己消失 */
+function dust(x,y,n){for(let i=0;i<n;i++)dusts.push({x,y,vx:(Math.random()-.5)*3.4,vy:-Math.random()*2.6,a:1,r:2+Math.random()*3});}
+function sparks(x,y,c,n){for(let i=0;i<n;i++)spk.push({x,y,vx:(Math.random()-.5)*11,vy:-Math.random()*9+1,a:1,c});}
+function ring(x,y,c,r0,r1,life){rings.push({x,y,c,r:r0,to:r1,a:1,life:life||18,t:0});}
+/* 格挡盾：在防御者身前画一面朝向攻击者的半圆能量盾，持续 life 帧淡出。
+   x,y=盾心；dir=防御者朝向（盾画在 -dir 那一侧，即面向攻击者）；h=角色高，决定盾大小 */
+function shield(x,y,dir,life,h,col){shields.push({x,y,dir,life:life||16,t:0,h,col:col||'#9fd8ff'});}
+function say(t,s){ G.msg={t,s:s||''}; G.msgT=0; }
+let toastEl=null,toastT=0;
+function toast(m){ toastEl=m; toastT=180; }
+
+/* ---------------- 命中共用逻辑 ---------------- */
+function landHit(att,def,m){
+  const blocked = def.block && !def.mv && def.onGround;
+  const dmg = m.dmg*att.st.pow*(blocked?.16:1);
+  def.hp=Math.max(0,def.hp-dmg);
+  G.taken[def.i]+=dmg;
+  att.met=Math.min(100,att.met+(blocked?m.met*.4:m.met));
+  def.met=Math.min(100,def.met+(blocked?2:(m.met||6)*.55));
+  def.vx=att.dir*m.kb*(blocked?.35:1)*(1/def.st.pow);
+  if(!blocked){ def.vy = m.dmg>18?-9.5 : m.dmg>10?-5.2 : -2.4; if(m.dmg>18) def.onGround=false; }
+  G.shake=Math.max(G.shake, blocked?9 : m.dmg>14?15:7);
+  G.hitstop=Math.max(G.hitstop, blocked?4 : m.dmg>14?9:5);
+  const hx=def.x-att.dir*def.w*.2;
+  const lowHit = att.mv && att.mv.startsWith('c');  /* 蹲攻打低段 */
+  const hy=def.y-def.h*(m.kind==='kick'?.42:(lowHit?.72:.6));
+  if(blocked){
+    /* 格挡特效：蓝色能量盾 + 多层冲击环 + 蓝白火花 + "挡"字 + 较强震屏。
+       之前只有 7 颗小火花 + shake4，几乎看不出在格挡。 */
+    def.stun=m.bs; def.flash=.7; SFX.block();
+    ring(hx,hy,'#9fd8ff',def.h*.06,def.h*.34,14);
+    ring(hx,hy,'#e6f7ff',def.h*.02,def.h*.18,9);
+    sparks(hx,hy,'#9fd8ff',12); sparks(hx,hy,'#ffffff',8);
+    shield(def.x,def.y-def.h*.5,def.dir,16,def.h,'#9fd8ff');
+    pops.push({x:hx,y:hy-def.h*.05,txt:'挡',a:1,s:0,c:'#9fd8ff'});
+  }else{
+    def.stun=m.hs; def.hurtT=1; def.flash=1;
+    att.combo++; att.comboT=90;
+    sparks(hx,hy,'#fff3d0',m.dmg>10?20:12);
+    /* 命中冲击波：白圈打底，重击再叠一层角色色大圈，拳皇那种"啪"一下的感觉 */
+    ring(hx,hy,'#ffffff',def.h*.04,def.h*(m.dmg>14?.42:.26),m.dmg>14?16:11);
+    if(m.dmg>14) ring(hx,hy,att.st.c,def.h*.08,def.h*.58,14);
+    pops.push({x:hx,y:hy,txt:'铮咚哒杀裂崩'[(Math.random()*6)|0],a:1,s:0,c:att.st.c});
+    dmgNums.push({x:def.x,y:def.y-def.h*.95,vx:0,vy:-1.6,g:.05,txt:'-'+Math.round(dmg),a:1,dec:.018});
+    if(att.combo>1) comboUI={n:att.combo,t:70,who:att.i};
+    if(m.sfx&&SFX[m.sfx]) SFX[m.sfx]();
+  }
+  if(def.hp<=0 && !def.dead) ko(def);
+}
+
+/* ---------------- 角色 ---------------- */
+class Fighter{
+  constructor(ri,slot,x,dir){
+    const st=ROSTER[ri];
+    this.ri=ri; this.i=slot; this.st=st; this.dir=dir;
+    this.h=st.h; this.w=st.h*(SPR[ri]?SPR[ri].ar:.45);
+    this.x=x; this.y=GROUND; this.vx=0; this.vy=0;
+    this.hp=100; this.disp=100; this.met=0;
+    this.spLeft=3; this.spCD=0;   /* 超必杀：每回合3次，用完进入CD */
+    this.onGround=true; this.crouch=false; this.block=false;
+    this.mv=null; this.mvT=0; this.hitDone=false; this.hitN=0;
+    this.stun=0; this.flash=0; this.combo=0; this.comboT=0;
+    this.anim=Math.random()*100|0; this.dead=false; this.deadT=0;
+    this.trail=[]; this.rot=0; this.lean=0; this.slashT=0;
+  }
+  spMove(){ const s=this.st.sp;
+    return {dmg:s.dmg,su:s.su,ac:s.ac,rc:s.rc,reach:s.reach||.72,kb:s.kb,hs:28,bs:16,
+      met:0,kind:'super',skind:s.kind,sfx:'super',name:s.name}; }
+  curMove(){ return this.mv==='super'? this.spMove() : getMove(this.mv, this.ri); }
+  canAct(){ return G.state==='fight' && !this.dead && this.stun<=0 && !this.mv; }
+  start(name){
+    if(name==='super'){
+      /* 超必杀：每回合3次 + CD制。次数用完或CD没转好都放不出。 */
+      if(this.spLeft<=0 || this.spCD>0) return false;
+      this.spLeft--; this.spCD=240; this.met=0; SFX.super();   /* CD 4秒：太短的话放完立刻又能放，没有节奏感 */
+      G.shake=Math.max(G.shake,15); G.slow=.5; G.slowT=18; flash=Math.max(flash,.55);
+      banner={txt:this.st.sp.name,t:0,col:this.st.c};
+      ring(this.x,this.y-this.h*.55,this.st.c,this.h*.2,this.h*1.1,20);
+      dust(this.x,this.y,16);
+    } else SFX.whiff();
+    this.mv=name; this.mvT=0; this.hitDone=false; this.hitN=0;
+    this.crouch=false; this.block=false;
+    return true;
+  }
+  update(inp,foe){
+    this.anim++;
+    if(this.spCD>0) this.spCD--;   /* 超杀CD每帧转 */
+    if(this.comboT>0) this.comboT--; else this.combo=0;
+    this.flash*=.82; this.slashT*=.9;
+    if(this.stun>0){ this.stun--; this.vx*=.86; }
+
+    if(this.canAct()){
+      /* 基础防御：R 键（独立于方向键，不会和走路冲突）。
+         后+蹲 = 下段蹲防（防低段招式）。按 A/← 走路 —— 跟以前一样。 */
+      const backCrouchBlock = !!inp.l && !!inp.d && this.onGround;
+      this.block = (!!inp.bl || backCrouchBlock) && this.onGround;
+      this.crouch = !!inp.d && this.onGround && !this.block;
+      let mvx=0;
+      if(!this.block){ if(inp.l) mvx-=1; if(inp.r) mvx+=1; }
+      this.vx = mvx*this.st.spd*(this.crouch?0:1);
+      if(inp.uP && this.onGround && !this.block && !this.crouch){
+        this.vy=-this.st.jump; this.onGround=false; SFX.jump(); dust(this.x,this.y,8);
+      }
+      /* 根据当前姿态选招：蹲→蹲攻  跳→跳攻  站→站立 */
+      const pre = this.crouch ? 'c' : (!this.onGround ? 'j' : '');
+      if(inp.lpP)   this.start(pre+'light');
+      else if(inp.hpP) this.start(pre+'heavy');
+      else if(inp.kP)  this.start(pre+'kick');
+      else if(inp.spP) this.start('super');
+    } else {
+      /* 招防：在出招过程中按 A/← 会中断招式、立刻进入防御（"招架"）。
+         平时按 A 是走路，只有"正在出招时按 A"才触发防御。
+         super 不允许中断招防（已经霸体了）。 */
+      if(this.mv && this.mv!=='super' && !this.block && !!inp.l && this.onGround){
+        this.mv=null; this.mvT=0; this.vx=0; this.hitDone=false; this.hitN=0;
+        this.block=true; SFX.block();
+      } else {
+        this.block = !!inp.bl && this.onGround;
+      }
+    }
+
+    if(this.mv){
+      const m=this.curMove(), sk=m.skind;
+      this.mvT++;
+      /* 连招取消：这一下打中人了，就能打断收招直接接更重的招。
+         轻→重→超必杀，一套搓下来就是拳皇那味儿。
+         打空了不行（hitDone 才算数），不然会是无限连。 */
+      /* 连招取消扩展：蹲轻→蹲重→超杀  跳轻→跳重→落地后可接站重
+         规则不变：必须 hitDone（打中才数），打空不能取消 */
+      if(this.hitDone && this.mvT>m.su){
+        const isC = this.mv.startsWith('c'), isJ = this.mv.startsWith('j');
+        const nextHeavy = isC ? 'cheavy' : (isJ ? 'jheavy' : 'heavy');
+        if((this.mv.endsWith('light')||this.mv.endsWith('kick')) && inp.hpP){
+          this.start(nextHeavy);
+        }
+        else if(this.mv!=='super' && inp.spP && this.spLeft>0 && this.spCD<=0){ this.start('super'); }
+      }
+      /* 突进类：主动帧往前拱 */
+      if(this.mvT>m.su && this.mvT<=m.su+m.ac){
+        if(sk==='rush')   this.x+=this.dir*8.5;
+        if(sk==='charge'){ this.x+=this.dir*10; if(this.mvT===m.su+1) dust(this.x,this.y,10); }
+        if((sk==='beam'||sk==='wave'||sk==='ball'||sk==='fry') && this.mvT===m.su+1) this.fire(sk);
+      }
+      /* 命中判定 */
+      const inActive = this.mvT>m.su && this.mvT<=m.su+m.ac;
+      if(sk!=='beam'&&sk!=='wave'){
+        if(sk==='rush' && this.mvT%6===0) this.hitDone=false;   // 连掌：多段
+        if(inActive && !this.hitDone && !foe.dead){
+          const reach=m.reach*this.h, dx=(foe.x-this.x)*this.dir, dy=Math.abs(foe.y-this.y);
+          if(dx>-this.w*.3 && dx<reach+foe.w*.3 && dy<this.h*.9){
+            this.hitDone=true; this.hitN++; landHit(this,foe,m);
+            if(sk==='slash'){ this.slashT=1; ring(foe.x,foe.y-this.h*.5,'#fff',this.h*.2,this.h*.9,14); }
+          }
+        }
+      }
+      if(this.mvT>=m.su+m.ac+m.rc){ this.mv=null; this.mvT=0; }
+    }
+
+    this.x+=this.vx; this.y+=this.vy;
+    if(!this.onGround){ this.vy+=.78; if(this.vy>22)this.vy=22; }
+    if(this.y>=GROUND){
+      if(!this.onGround && this.vy>6){ dust(this.x,GROUND,10); SFX.land(); }
+      this.y=GROUND; this.vy=0; this.onGround=true;
+    } else this.onGround=false;
+    this.x=clamp(this.x,WORLD.l+this.w*.4,WORLD.r-this.w*.4);
+    if(!this.mv && this.stun<=0 && Math.abs(this.vx)>.4 && this.onGround && this.anim%9===0)
+      dust(this.x-this.dir*10,this.y,2);
+    this.trail.push({x:this.x,y:this.y});
+    if(this.trail.length>7) this.trail.shift();
+    this.disp = this.disp>this.hp ? Math.max(this.hp,this.disp-.42) : this.hp;
+  }
+  fire(sk){
+    const m=this.curMove(), dir=this.dir;
+    if(sk==='ball'){
+      /* 篮球：抛物线 + 落地反弹，可多次命中（带再命中冷却） */
+      PROJ.push({x:this.x+dir*this.w*.5, y:this.y-this.h*.78,
+        vx:dir*7.4, vy:-8.6, g:.40, r:this.h*.085,
+        dmg:m.dmg, kb:m.kb, hs:18, bs:9, kind:'ball', owner:this.i, att:this,
+        life:190, bounce:this.st.sp.bounce||3, cool:0, spin:0});
+      SFX.throw(); ring(this.x+dir*this.w*.5,this.y-this.h*.78,this.st.c,6,this.h*.3,12);
+      return;
+    }
+    if(sk==='fry'){
+      /* 手枪腿：甩出去减速、停住、再飞回手里，去程回程各判定一次 */
+      PROJ.push({x:this.x+dir*this.w*.45, y:this.y-this.h*.66,
+        vx:dir*28, vy:-1.4, g:.05, r:this.h*.115,
+        dmg:m.dmg, kb:m.kb, hs:20, bs:11, kind:'fry', owner:this.i, att:this,
+        dir0:dir, dec:dir*0.90, life:170, cool:0, spin:0});
+      SFX.fry(); ring(this.x+dir*this.w*.5,this.y-this.h*.66,'#ffd98a',6,this.h*.34,12);
+      return;
+    }
+    const y=this.y-this.h*(sk==='beam'?.62:.5);
+    const sp = sk==='beam'?14:9.5;
+    /* cool 必须初始化为 0 —— 碰撞判定里有 p.cool<=0，
+       undefined<=0 在 JS 里是 false，光炮/冲击波就会直接穿人 */
+    PROJ.push({x:this.x+dir*this.w*.55,y,vx:dir*sp,r:this.h*(sk==='beam'?.14:.24),
+      dmg:m.dmg,kb:m.kb,hs:24,bs:12,kind:sk,owner:this.i,att:this,
+      life:sk==='beam'?80:110,a:1,ph:0,cool:0});
+    if(sk==='beam') SFX.beam(); else SFX.wave();
+    sparks(this.x+dir*this.w*.6,y,this.st.c,10);
+  }
+  hit(foe,m){ landHit(this,foe,m); }
+  pose(){
+    const m=this.mv?this.curMove():null;
+    let rot=0,sx=1,sy=1,ext=0,legExt=0,lean=0;
+    const br=Math.sin(this.anim*.075)*.012; sy=1+br; sx=1-br;
+    if(this.crouch){ sy=.8; sx=1.08; }
+    if(!this.onGround){ const t=clamp(-this.vy/16,-1,1); sy=1+t*.07; sx=1-t*.05; rot=-this.dir*.05; legExt=.3; }
+    if(m){
+      const p=this.mvT;
+      if(p<=m.su){ const t=p/m.su; ext=ease(t)*.34; lean=-.05*t; }
+      else if(p<=m.su+m.ac){ ext=.34+ease((p-m.su)/m.ac)*.66; lean=m.skind==='charge'?.3:.16; }
+      else { const t=(p-m.su-m.ac)/m.rc; ext=1-ease(t); lean=.16*(1-t); }
+      if(m.kind==='kick'){ legExt=ext; ext*=.45; }
+      if(m.skind==='slash'){ legExt=ext*.3; lean=.2*ext; }
+      if(m.skind==='charge'){ lean=.34*ext; }
+      if(m.skind==='beam'||m.skind==='wave'){ ext*=.5; lean=-.1*ext; }
+    }
+    if(this.stun>0){ lean=-.22*Math.min(1,this.stun/8); rot=-this.dir*.1; }
+    if(this.block){ sx=1.06; sy=.94; lean=-.06; }
+    if(this.dead){ const t=clamp(this.deadT/26,0,1); rot=-this.dir*1.4*t; sy=1-t*.1; }
+    /* 打完收工：赢家原地蹦两下，别直挺挺站着 */
+    if(G.state==='over' && !this.dead){
+      /* over 状态下 tick 已经停了，G.t 不再走，所以用真实时间驱动 */
+      const b=Math.sin(performance.now()/110);
+      sy=1+b*.055; sx=1-b*.045; rot=b*.05; lean=-b*.05;
+    }
+    this.rot=rot; this.lean=lean;
+    return {rot:rot+lean*.12, sx:sx*(1+lean*.12), sy, ext, legExt};
+  }
+}
+
+/* ---------------- 回合流程 ---------------- */
+function makeFighters(){
+  const [p0,p1]=G.pick;
+  G.f=[new Fighter(p0,0,470,1), new Fighter(p1,1,810,-1)];
+}
+function newRound(){
+  makeFighters();   /* 每回合重新创建，超杀 3 次自动刷新 */
+  pops=[];dusts=[];spk=[];dmgNums=[];PROJ=[];rings=[];shields=[];comboUI=null;banner=null;
+  G.state='intro'; G.roundT=0; G.time=3600; G.hitstop=0; G.slow=1; G.slowT=0;
+  G.cam.x=640; G.cam.z=1; AI.t=0; AI.blk=0; AI.noBlk=0;
+  say(G.round>=3?'决胜局':'第 '+G.round+' 回合', G.round>=3?'FINAL ROUND':'READY');
+}
+function ko(loser){
+  loser.dead=true; loser.deadT=0; loser.vy=-9.5; loser.onGround=false;
+  G.state='ko'; G.roundT=0; flash=1; G.shake=22; G.slow=.28; G.slowT=44;
+  G.lastWin = G.f[0]===loser?1:0;
+  say('K.O.'); SFX.ko();
+  G.wins[G.lastWin]++;
+}
+function timeUp(){
+  G.state='ko'; G.roundT=0; flash=.7;
+  const [a,b]=G.f;
+  if(a.hp===b.hp){ G.lastWin=-1; }
+  else { const w=a.hp>b.hp?a:b; G.lastWin=w.i; G.wins[w.i]++; const l=w===a?b:a; l.dead=true; l.deadT=0; }
+  say(G.lastWin<0?'平局':'时间到 · 判定'); SFX.ko();
+}
+
+/* ---------------- 输入 ---------------- */
+const keys=new Set(), pressed=new Set();
+const PREVENT=new Set(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','Slash','Quote','Comma','Period']);
+addEventListener('keydown',e=>{
+  if(PREVENT.has(e.code)) e.preventDefault();
+  if(!keys.has(e.code)) pressed.add(e.code);
+  keys.add(e.code);
+  if(e.code==='Escape'){ if(G.state==='select') backToMenu(); else if(G.state!=='menu') togglePause(); }
+  if(e.code==='Enter'&&G.state==='over') backToMenu();
+  if(e.code==='KeyR'&&(G.state==='over'||G.state==='pause')) rematch();
+  if(e.code==='KeyM'){ setMute(!MUTED); toast(MUTED?'静音':'恢复音效'); }
+  if(G.state==='select') selectKeys(e.code);
+});
+addEventListener('keyup',e=>keys.delete(e.code));
+addEventListener('blur',()=>keys.clear());
+const list=v=>Array.isArray(v)?v:[v];
+const down=c=>list(c).some(x=>keys.has(x));
+const hitc=c=>list(c).some(x=>pressed.has(x));
+function readInput(i){
+  if(i===1&&G.mode==='ai') return aiInput();
+  const k=KEYMAP[i];
+  return {l:down(k.l),r:down(k.r),d:down(k.d),bl:down(k.bl),
+    uP:hitc(k.u),lpP:hitc(k.lp),hpP:hitc(k.hp),kP:hitc(k.k),spP:hitc(k.sp)};
+}
+
+/* ---------------- AI ----------------
+   old 版本的问题：出招判定挂在「每 N 帧随机一次」的窗口上，所以看上去又呆又乱。
+   现在按优先级来判：
+     ① 对手在出招 / 有飞行道具飞来 → 挡
+     ② 对手在收招僵直 → 抓（越难越必抓）
+     ③ 对手跳在空中往我头上落 → 防空
+     ④ 满槽 + 有机会 → 放超必杀
+     ⑤ 进射程 → 随机选轻/重/脚，不是永远同一招
+     ⑥ 都不满足 → 按角色类型走位（远程拉开、近战贴上去、别把自己逼进墙角）
+   三档难度只是这些概率和反应间隔的差别，逻辑是同一套。 */
+const AI={t:0,blk:0,noBlk:0};
+const AI_TUNE=[
+  {react:12, blk:.28, pun:.22, agg:.58, aa:.22, sup:.22},
+  {react:8,  blk:.58, pun:.55, agg:.78, aa:.58, sup:.55},
+  {react:5,  blk:.86, pun:.88, agg:.95, aa:.88, sup:.86},
+];
+function aiInput(){
+  const me=G.f[1], foe=G.f[0], o={l:false,r:false,d:false,bl:false};
+  if(G.state!=='fight'||me.dead||me.mv||me.stun>0) return o;
+  /* AI_TUNE 越界兜底（devtools 改或存档损坏时退到普通档，别让 AI 直接崩） */
+  const T=AI_TUNE[clamp(G.diff,0,AI_TUNE.length-1)] || AI_TUNE[1];
+  const dx=foe.x-me.x, d=Math.abs(dx), dir=dx>0?1:-1;
+  const toward=dir>0?'r':'l', away=dir>0?'l':'r';
+  const mvR=n=>getMove(n,me.ri).reach*me.h*.92;
+  const ranged=/beam|wave|ball|fry/.test(me.st.sp.kind);
+  const spReach=(me.st.sp.reach||.72)*me.h*.95;
+  const spR=ranged ? d<me.h*2.7 : d<spReach;
+  AI.t++;
+
+  if(AI.noBlk>0) AI.noBlk--;
+  if(AI.blk>0){ AI.blk--; o.bl=true; return o; }   /* 挡要持续按住，不能只按一帧 */
+
+  const inc=PROJ.some(p=>p.owner!==me.i && (p.vx>0)===(me.x>p.x) && Math.abs(p.x-me.x)<me.h*1.7);
+  const fm=foe.mv?foe.curMove():null;
+  const foeHitWin=!!fm && foe.mvT<=fm.su+fm.ac+3 && d<(fm.reach||.6)*foe.h*1.4+me.w*.6;
+  const foeRecover=!!fm && foe.mvT>fm.su+fm.ac;     /* 收招僵直：最该抓的时机 */
+  const foeAir=!foe.onGround;
+
+  /* 该挡就挡：判定每帧都跑（概率按帧折算，等效反应时间还是 react 档），
+     但挡完有 12 帧冷却 —— 不然对手连按轻拳能把 AI 锁进永久僵直里出不了手 */
+  const realThreat = inc || (foeHitWin && d < (fm.reach||.6)*foe.h*1.25 + me.w*.5);
+  if(realThreat && AI.noBlk<=0 && Math.random()<T.blk*.28){
+    AI.blk=7+(Math.random()*9|0); AI.noBlk=12; return {l:false,r:false,d:false,bl:true};
+  }
+
+  if(AI.t%T.react===0){
+    if(foeRecover && d<mvR('heavy')*1.05 && Math.random()<T.pun){
+      o[Math.random()<.5?'hpP':'kP']=true; return o;
+    }
+    if(foeAir && d<me.h*.9 && foe.vy>-2 && Math.random()<T.aa){ o.kP=true; return o; }
+    if(me.spLeft>0 && me.spCD<=0 && spR && (foeRecover||foeAir||(ranged?d<me.h*2.4:d<me.h*.9)) && Math.random()<T.sup){
+      /* 远程大招（光炮/冲击波）对站着的对手也放——本来就该打中人。
+         之前要求对方硬直/跳/极近才放，导致远程角色空有大招不用。
+         beam/wave 必须能命中站立目标（cool 已修）。 */
+      o.spP=true; return o;
+    }
+    if(d<me.h*.58 && Math.random()<T.agg*((foe.block&&Math.random()<.6)?.3:1)){  /* 统一触发距离，强度只看难度 */
+      /* AI 也用蹲攻/跳攻：对手在地面且距离近→概率蹲攻（难格挡）；
+         对手在空中→优先跳攻或站踢（防空）；否则随机站立招 */
+      const r=Math.random();
+      if(!foe.onGround && d<me.h*.95 && Math.random()<.5){
+        o.kP=true;  /* 空中对空：踢 */
+      } else if(!me.onGround){
+        /* 自己在空中：出跳攻 */
+        const jr=Math.random();
+        if(jr<.4) o.lpP=true; else if(jr<.75) o.hpP=true; else o.kP=true;
+      } else if(foe.onGround && d<me.h*.65 && Math.random()<.35){
+        /* 近距离对地：蹲攻（低段难防） */
+        o.d=true;  /* 先蹲下 */
+        const cr=Math.random();
+        if(cr<.4) o.lpP=true; else if(cr<.75) o.hpP=true; else o.kP=true;
+      } else {
+        if(r<.34) o.lpP=true; else if(r<.67) o.hpP=true; else o.kP=true;
+      }
+      return o;
+    }
+  }
+
+  /* 走位按「理想距离」来，不留死区 ——
+     之前用的是"够不着才上"，和"进射程才打"两套阈值，中间夹出一条缝，
+     对手刚好站在缝里的时候 AI 就杵着不动了（实测卡在 131px 一辈子）。 */
+  /* 走位：主动压上去，不是"保持理想距离"。
+     近战角色就是要贴身打，远程角色也要进射程放招。
+     只有真的贴身了（几乎撞一起）才拉开一点。 */
+  /* 走位距离统一按角色高度，不看具体招式 reach ——
+     这样所有角色的 AI 在同一难度下强度一致，坤坤也不会因为手短就发呆。
+     AI 不后退走（后退键=玩家闪避，被 AI 滥用会一直闪避不进攻），
+     贴身了也不退，改成继续前压，省得 AI 一直退到角落浪费时间 */
+  const ideal = me.h*.42;   /* 全角色统一理想距离，强度只看难度档位 */
+  const corner = me.x<WORLD.l+me.w*1.3 || me.x>WORLD.r-me.w*1.3;
+  if(d>ideal*.85) o[toward]=true;                     /* 不够近：压上去 */
+  else if(d<ideal*.35 && Math.random()<.55) o[toward]=true;   /* 贴身了继续压 */
+  else if(corner) o[toward]=true;                      /* 别把自己关进角落 */
+  return o;
+}
+
+/* ---------------- 推进 ---------------- */
+function tick(){
+  musicTick();
+  /* 计时器必须在状态判断之前推进：否则比赛结束时 msgT 停在 0，
+     刚 say() 出来的「谁获胜」永远淡入不了（alpha 恒等于 0） */
+  G.t++; G.msgT++;
+  G.shake*=.86; flash*=.88;
+  if(banner && ++banner.t>84) banner=null;
+  if(G.slowT>0){ G.slowT--; if(G.slowT<=0) G.slow=1; }
+  if(G.state==='menu'||G.state==='pause'||G.state==='select'||G.state==='over'){ pressed.clear(); return; }
+
+  if(G.state==='intro'){
+    G.roundT++;
+    if(G.roundT===44) say('开打！','FIGHT');
+    if(G.roundT>86){ G.state='fight'; G.msg=null; G.hintT=200; }   /* 开打后按键提示亮 200 帧(≈3.3秒)再淡掉 */
+    pressed.clear(); return;
+  }
+  if(G.state==='fight'){ G.time--; if(G.time<=0) timeUp(); if(G.hintT>0) G.hintT--; }
+  if(G.state==='ko'){
+    G.roundT++;
+    if(G.roundT===34){
+      const done=G.wins[0]>=2?0:G.wins[1]>=2?1:-1;
+      if(done>=0) say(ROSTER[G.pick[done]].name+' 拿下本局','WIN');
+      else if(G.lastWin<0) say('平局','DRAW');
+      else say(ROSTER[G.pick[G.lastWin]].name+' 拿下本回合','ROUND WIN');
+    }
+    if(G.roundT>170){
+      if(G.wins[0]>=2||G.wins[1]>=2){
+        G.state='over'; G.roundT=0; banner=null;
+        const wi=G.wins[0]>=2?0:1, playerWon = G.mode==='ai' && wi===0;
+        if(playerWon) recordWin();
+        const perfect = G.taken[wi]<=0;
+        say(ROSTER[G.pick[wi]].name+' 获胜'+(perfect?' · PERFECT':''),
+            perfect?'毫发无伤 · Enter 回菜单 / R 再来一局'
+            :(G.mode==='ai'&&wi===1?'再试一次 · Enter 回菜单 / R 再来一局':'Enter 回菜单 / R 再来一局'));
+        if(perfect) SFX.super();
+      } else { G.round++; newRound(); }
+    }
+  }
+  if(G.hitstop>0) G.hitstop--;
+  else{
+    const [a,b]=G.f, ia=readInput(0), ib=readInput(1);
+    pressed.clear();
+    a.update(ia,b); b.update(ib,a);
+    a.dir = b.x>=a.x?1:-1; b.dir = a.x>=b.x?1:-1;
+    if(a.dead)a.deadT++; if(b.dead)b.deadT++;
+    const minD=(a.w+b.w)*.34, dd=b.x-a.x;
+    if(Math.abs(dd)<minD && Math.abs(a.y-b.y)<a.h*.7){
+      const push=(minD-Math.abs(dd))*.5*(dd>0?1:-1);
+      a.x=clamp(a.x-push,WORLD.l+a.w*.4,WORLD.r-a.w*.4);
+      b.x=clamp(b.x+push,WORLD.l+b.w*.4,WORLD.r-b.w*.4);
+    }
+  }
+  /* 飞行道具 */
+  for(let i=PROJ.length-1;i>=0;i--){
+    const p=PROJ[i]; p.life--; if(p.cool>0)p.cool--;
+    if(p.kind==='ball'){
+      p.vy+=p.g; p.x+=p.vx; p.y+=p.vy; p.spin+=p.vx*.05;
+      if(p.y>GROUND-p.r && p.vy>0){
+        p.y=GROUND-p.r; p.vy*=-.62; p.bounce--;
+        dust(p.x,GROUND,4); SFX.bounce();
+        if(p.bounce<0){ PROJ.splice(i,1); continue; }
+      }
+    }else if(p.kind==='fry'){
+      /* 减速→停→反向加速，飞回主人手里；回程判定第二次 */
+      p.vx-=p.dec; p.x+=p.vx; p.y+=p.vy; p.vy+=p.g; p.spin+=.36;
+      if(p.vx*p.dir0<0 && Math.abs(p.x-p.att.x)<38 && Math.abs(p.y-(p.att.y-p.att.h*.66))<90){
+        ring(p.x,p.y,'#ffd98a',4,p.r*2.4,10); PROJ.splice(i,1); continue;
+      }
+    }else{ p.x+=p.vx; p.ph+=.3; }
+    const foe=G.f[1-p.owner];
+    const dx=Math.abs(foe.x-p.x), dy=Math.abs((foe.y-foe.h*.5)-p.y);
+    /* 腾空=免疫所有飞行道具。用户要求"跳跃可以躲避所有远程技能"，
+       弹地球/光炮/冲击波/手枪腿一律从脚下钻过去。近战跳攻是另一套命中判定，不受影响。
+       AI 有防空踢做制衡，不会让跳成为无脑解。 */
+    const vTol = foe.h*.5+p.r;
+    if(!foe.dead && foe.onGround && p.cool<=0 && dx<foe.w*.42+p.r && dy<vTol){
+      landHit(p.att,foe,{dmg:p.dmg,kb:p.kb,hs:p.hs,bs:p.bs,met:6,kind:'punch',sfx:p.kind==='ball'?'kick':'heavy'});
+      sparks(p.x,p.y,ROSTER[p.att.ri].c,14);
+      if(p.kind==='ball'){ p.cool=16; p.vx*=.82; }
+      else if(p.kind==='fry'){ p.cool=20; }   /* 去程打一下，飞回来还能再打一下 */
+      else { PROJ.splice(i,1); continue; }
+    }
+    if(p.life<=0||p.x<WORLD.l-140||p.x>WORLD.r+140) PROJ.splice(i,1);
+  }
+  const [a,b]=G.f, mid=(a.x+b.x)/2, gap=Math.abs(a.x-b.x);
+  G.cam.x=lerp(G.cam.x,clamp(mid,540,740),.09);
+  G.cam.z=lerp(G.cam.z,clamp(1.3-gap/1600,.94,1.3),.07);
+  for(const arr of [dusts,spk,dmgNums,pops]){
+    for(let i=arr.length-1;i>=0;i--){ const e=arr[i];
+      e.x+=(e.vx||0); e.y+=(e.vy||0);
+      if(e.vy!==undefined) e.vy+=e.g!==undefined?e.g:.32;
+      e.a-=e.dec||.035; e.s=Math.min(1,(e.s||0)+.16);
+      if(e.a<=0) arr.splice(i,1); }
+  }
+  for(let i=rings.length-1;i>=0;i--){ const r=rings[i]; r.t++;
+    r.cur=lerp(r.r,r.to,clamp(r.t/r.life,0,1)); r.a=1-r.t/r.life;
+    if(r.t>=r.life) rings.splice(i,1); }
+  for(let i=shields.length-1;i>=0;i--){ const s=shields[i]; s.t++;
+    if(s.t>=s.life) shields.splice(i,1); }
+  if(comboUI&&--comboUI.t<=0) comboUI=null;
+}
+
+/* ---------------- 绘制 ---------------- */
+function bg(){
+  if(R3 && R3.ok && D3){
+    /* 3D 模式：舞台和选手都在 three.js 里画，2D 画布保持透明只叠灯效。
+       （之前 sync3D 放在函数末尾，前面那层不透明的背景渐变正好把 3D 全盖住） */
+  /* 舞台顶灯的光晕（3D 模式下也保留，叠在 three.js 画面上） */
+  for(let i=0;i<5;i++){
+    const x=140+i*250, sw=.5+.5*Math.sin(G.t*.03+i);
+    ctx.save(); ctx.globalAlpha=.09+sw*.05;
+    const rg=ctx.createRadialGradient(x,120,8,x,120,300);
+    rg.addColorStop(0,'#ffd9a0'); rg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=rg; ctx.fillRect(x-300,0,600,470); ctx.restore();
+    ctx.fillStyle='#1d1722'; ctx.fillRect(x-16,112,32,14);
+    ctx.fillStyle=`rgba(255,220,170,${.5+sw*.4})`; ctx.fillRect(x-11,124,22,6);
+  }
+    sync3D();
+    return;
+  }
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#0b0910'); g.addColorStop(.45,'#1a1420'); g.addColorStop(1,'#0a0810');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.save(); ctx.globalAlpha=.4; ctx.textAlign='center';
+  ctx.font='900 92px "PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.fillStyle='#2a1d2e'; ctx.fillText('子豪快打',W/2,196);
+  ctx.restore();
+  for(let i=0;i<5;i++){
+    const x=140+i*250, sw=.5+.5*Math.sin(G.t*.03+i);
+    ctx.save(); ctx.globalAlpha=.09+sw*.05;
+    const rg=ctx.createRadialGradient(x,120,8,x,120,300);
+    rg.addColorStop(0,'#ffd9a0'); rg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=rg; ctx.fillRect(x-300,0,600,470); ctx.restore();
+    ctx.fillStyle='#1d1722'; ctx.fillRect(x-16,112,32,14);
+    ctx.fillStyle=`rgba(255,220,170,${.5+sw*.4})`; ctx.fillRect(x-11,124,22,6);
+  }
+  ctx.fillStyle='#07060a';
+  for(let i=0;i<34;i++){ const x=i*40+((i*37)%17), y=470+((i*53)%26);
+    ctx.beginPath(); ctx.arc(x,y,13+((i*7)%5),0,7); ctx.fill(); ctx.fillRect(x-15,y+8,30,64); }
+  const fg=ctx.createLinearGradient(0,GROUND-40,0,H);
+  fg.addColorStop(0,'#241a22'); fg.addColorStop(1,'#0c0910');
+  ctx.fillStyle=fg; ctx.fillRect(0,GROUND-6,W,H-GROUND+6);
+  ctx.strokeStyle='#ffffff12'; ctx.lineWidth=1;
+  for(let i=-8;i<=8;i++){ ctx.beginPath(); ctx.moveTo(W/2+i*70,GROUND); ctx.lineTo(W/2+i*260,H); ctx.stroke(); }
+  for(let i=1;i<=5;i++){ const y=GROUND+i*i*4.6; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  ctx.fillStyle='#e0b35230'; ctx.fillRect(0,GROUND-2,W,2);
+}
+
+function capsule(x0,y0,x1,y1,r,c1,c2){
+  ctx.lineCap='round';
+  ctx.strokeStyle='#0a0709'; ctx.lineWidth=r*2+7;
+  ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
+  ctx.strokeStyle=c2; ctx.lineWidth=r*2;
+  ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
+  ctx.strokeStyle=c1; ctx.lineWidth=r*.9;
+  ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
+}
+function limb(x0,y0,x1,y1,bend,r,c1,c2){
+  const mx=(x0+x1)*.5, my=(y0+y1)*.5-bend;
+  capsule(x0,y0,mx,my,r,c1,c2);
+  capsule(mx,my,x1,y1,r*.86,c1,c2);
+  ctx.beginPath(); ctx.arc(mx,my,r*.92,0,7); ctx.fillStyle=c2; ctx.fill();
+}
+function drawFighter(f){
+  const sp=SPR[f.ri]; if(!sp) return;
+  const m=f.mv?f.curMove():null, P=f.pose();
+  const h=f.h*P.sy, w=h*sp.ar, col=f.st.c, ox=-w*(sp.ax-.5);
+  ctx.save();
+  ctx.translate(f.x,f.y); ctx.scale(f.dir,1); ctx.rotate(P.rot);
+  ctx.save(); ctx.globalAlpha=.4; ctx.fillStyle='#000';
+  ctx.beginPath(); ctx.ellipse(0,0,f.w*.5,f.h*.035,0,0,7); ctx.fill(); ctx.restore();
+  const blit=(a)=>{
+    ctx.save(); ctx.globalAlpha=a;
+    if(sp.additive) ctx.globalCompositeOperation='lighter';
+    ctx.drawImage(sp.canvas,ox-w/2,-h,w,h); ctx.restore();
+  };
+  if(m||!f.onGround)
+    for(let i=0;i<f.trail.length-1;i++){ const t=f.trail[i];
+      ctx.save(); ctx.globalAlpha=(i/f.trail.length)*.08*(m&&m.skind==='rush'?2.2:1);  /* 减淡防身体副本乱飘 */
+      ctx.translate(t.x-f.x,t.y-f.y);
+      if(sp.additive) ctx.globalCompositeOperation='lighter';
+      ctx.drawImage(sp.canvas,ox-w/2,-h,w,h); ctx.restore(); }
+
+  /* 骨骼：整张立绘按关节切成 10 块，各自绕关节转 */
+  const rg=sp.rig;
+  let rigA=null;
+  if(rg){
+    rigA=bonePose(f,P,rg);
+    ctx.save(); drawMesh(f,sp,P,rigA,sp.canvas); ctx.restore();
+    if(f.flash>.02){ ctx.save(); ctx.globalCompositeOperation='lighter';
+      ctx.globalAlpha=f.flash*.6; drawMesh(f,sp,P,rigA,rg.white); ctx.restore(); }
+  } else blit(1);
+
+  /* 近侧拳头/脚掌的攻击残影，让打击点更醒目 */
+  if(m && P.ext>.35 && m.kind!=='kick'){
+    const tip=rigA? rigTip(sp,f,P,rigA,'armF1') : null;
+    const fx=tip? tip.x : w*.3+ox, fy=tip? tip.y : -h*.66;
+    ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=.35*P.ext;
+    ctx.beginPath(); ctx.arc(fx,fy,h*.05,0,7); ctx.fillStyle='#fff'; ctx.fill(); ctx.restore();
+  }
+  if(m && m.skind==='slash'){
+    /* 实心月牙刀光 + 前缘高光，比描一条圆弧像刀得多 */
+    const t=clamp(P.ext,0,1), cx=ox+w*.15, cy=-h*.60;
+    const R=f.h*(.34+.78*t), th=Math.max(4,h*.17*(1-t*.4));
+    ctx.save(); ctx.globalCompositeOperation='lighter';
+    ctx.beginPath();
+    ctx.arc(cx,cy,R,-1.15,.62);
+    ctx.arc(cx,cy,Math.max(2,R-th),.62,-1.15,true);
+    ctx.closePath();
+    const g=ctx.createRadialGradient(cx,cy,Math.max(1,R-th),cx,cy,R);
+    g.addColorStop(0,'#fff'); g.addColorStop(.5,'#fff6d8'); g.addColorStop(1,col);
+    ctx.globalAlpha=.85*t; ctx.fillStyle=g; ctx.fill();
+    ctx.globalAlpha=t; ctx.strokeStyle='#fff'; ctx.lineWidth=Math.max(1.5,h*.018);
+    ctx.beginPath(); ctx.arc(cx,cy,R,-1.15,.62); ctx.stroke();
+    ctx.restore();
+  }
+  if(m && P.legExt>.35){    /* 踢击：脚掌位置画一道速度残影 */
+    const tip=rigA? rigTip(sp,f,P,rigA,'legF1') : null;
+    const fx=tip? tip.x : w*.3+ox, fy=tip? tip.y : -h*.1;
+    ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=.4*P.legExt;
+    ctx.strokeStyle='#fff'; ctx.lineWidth=h*.02;
+    ctx.beginPath(); ctx.arc(fx,fy,h*.17,-.9,.5); ctx.stroke(); ctx.restore();
+  }
+  if(f.block){
+    ctx.save(); ctx.globalAlpha=.55+.2*Math.sin(G.t*.3);
+    ctx.strokeStyle='#9fd8ff'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.moveTo(w*.42+ox,-h*.92); ctx.lineTo(w*.56+ox,-h*.55); ctx.lineTo(w*.42+ox,-h*.16); ctx.stroke();
+    ctx.globalAlpha=.16; ctx.fillStyle='#7fc4ff';
+    ctx.beginPath(); ctx.moveTo(w*.40+ox,-h*.94); ctx.lineTo(w*.60+ox,-h*.55); ctx.lineTo(w*.40+ox,-h*.14); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+  if(f.spLeft>0 && f.spCD<=0 && G.state==='fight' && !f.dead){   /* 超杀CD转好：脚下淡光环提示 */
+    ctx.save(); ctx.globalAlpha=.22+.12*Math.sin(G.t*.12+f.i);
+    ctx.strokeStyle=col; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.ellipse(f.x,f.y,f.w*.55,f.h*.06,0,0,7); ctx.stroke(); ctx.restore();
+  }
+}
+function drawProj(p){
+  const c=ROSTER[p.att.ri].c;
+  if(p.kind==='fry'){
+    /* 炸鸡腿：酥皮用叠块+高光疙瘩，骨头单独一根 */
+    ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.spin);
+    ctx.globalAlpha=.3; ctx.strokeStyle='#ffd98a'; ctx.lineWidth=p.r*.5;
+    ctx.beginPath(); ctx.arc(0,0,p.r*1.5,-.6,.6); ctx.stroke();
+    ctx.globalAlpha=1;
+    ctx.strokeStyle='#f6efdd'; ctx.lineWidth=p.r*.44; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(p.r*.5,0); ctx.lineTo(p.r*1.5,0); ctx.stroke();
+    ctx.fillStyle='#fbf5e6';
+    ctx.beginPath(); ctx.arc(p.r*1.55,-p.r*.26,p.r*.30,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(p.r*1.55, p.r*.26,p.r*.30,0,7); ctx.fill();
+    const g=ctx.createRadialGradient(-p.r*.3,-p.r*.35,p.r*.15,0,0,p.r*1.15);
+    g.addColorStop(0,'#f0b95e'); g.addColorStop(.55,'#c8801f'); g.addColorStop(1,'#7d450f');
+    ctx.fillStyle=g;
+    ctx.beginPath(); ctx.ellipse(0,0,p.r*1.08,p.r*.92,0,0,7); ctx.fill();
+    ctx.strokeStyle='#5d3208'; ctx.lineWidth=Math.max(1,p.r*.1); ctx.stroke();
+    ctx.fillStyle='#e8a83e';
+    for(let i=0;i<6;i++){ const a=i*1.05+.4;
+      ctx.beginPath(); ctx.arc(Math.cos(a)*p.r*.62,Math.sin(a)*p.r*.55,p.r*.24,0,7); ctx.fill(); }
+    ctx.fillStyle='rgba(255,240,200,.55)';
+    ctx.beginPath(); ctx.ellipse(-p.r*.34,-p.r*.4,p.r*.34,p.r*.17,-.5,0,7); ctx.fill();
+    ctx.restore();
+    return;
+  }
+  if(p.kind==='ball'){
+    /* 篮球：橙色球体 + 随自转动的接缝，落地前留一条拖影 */
+    ctx.save(); ctx.globalAlpha=.28; ctx.strokeStyle=c; ctx.lineWidth=p.r*.5;
+    ctx.beginPath(); ctx.moveTo(p.x-p.vx*3,p.y-p.vy*3); ctx.lineTo(p.x,p.y); ctx.stroke(); ctx.restore();
+    ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.spin);
+    const g=ctx.createRadialGradient(-p.r*.35,-p.r*.4,p.r*.15,0,0,p.r);
+    g.addColorStop(0,'#f2a44e'); g.addColorStop(.6,'#d8791f'); g.addColorStop(1,'#8f4a10');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,0,p.r,0,7); ctx.fill();
+    ctx.strokeStyle='#3a1d07'; ctx.lineWidth=Math.max(1.4,p.r*.11);
+    ctx.beginPath(); ctx.arc(0,0,p.r,0,7); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-p.r,0); ctx.lineTo(p.r,0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,-p.r); ctx.lineTo(0,p.r); ctx.stroke();
+    ctx.beginPath(); ctx.arc(-p.r*1.25,0,p.r*1.15,-.85,.85); ctx.stroke();
+    ctx.beginPath(); ctx.arc( p.r*1.25,0,p.r*1.15,Math.PI-.85,Math.PI+.85); ctx.stroke();
+    ctx.restore();
+    return;
+  }
+  ctx.save(); ctx.globalCompositeOperation='lighter';
+  if(p.kind==='beam'){
+    const L=p.r*7;
+    const g=ctx.createLinearGradient(p.x-L,0,p.x+L,0);
+    g.addColorStop(0,c+'00'); g.addColorStop(.4,c); g.addColorStop(.6,'#fff'); g.addColorStop(1,c+'00');
+    ctx.fillStyle=g; ctx.globalAlpha=.9;
+    ctx.beginPath(); ctx.ellipse(p.x,p.y,L,p.r*(1+.12*Math.sin(p.ph)),0,0,7); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.globalAlpha=.95;
+    ctx.beginPath(); ctx.ellipse(p.x,p.y,L*.55,p.r*.42,0,0,7); ctx.fill();
+  }else{
+    for(let i=0;i<3;i++){
+      ctx.globalAlpha=(.7-i*.2)*clamp(p.life/25,0,1);
+      ctx.strokeStyle=i===1?'#fff':c; ctx.lineWidth=p.r*(.5-i*.1);
+      ctx.beginPath(); ctx.arc(p.x-(p.vx>0?p.r*i:-p.r*i)*-1,p.y,p.r*(1-i*.22),-1.15,1.15); ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+function bar(x,y,wv,val,disp,mir,grad,name,tag,wins){
+  ctx.save(); ctx.translate(x,y); if(mir) ctx.scale(-1,1);
+  ctx.fillStyle='#000000aa'; ctx.fillRect(-2,-2,wv+4,22);
+  ctx.fillStyle='#2a1220'; ctx.fillRect(0,0,wv,18);
+  ctx.fillStyle='#e8c14a'; ctx.fillRect(0,0,wv*disp/100,18);
+  const g=ctx.createLinearGradient(0,0,0,18);
+  g.addColorStop(0,grad[0]); g.addColorStop(1,grad[1]);
+  ctx.fillStyle=g; ctx.fillRect(0,0,wv*val/100,18);
+  ctx.fillStyle='#ffffff30'; ctx.fillRect(0,0,wv*val/100,5);
+  if(val<25&&val>0){   /* 残血脉冲，不看一眼就漏了 */
+    ctx.save(); ctx.globalAlpha=.16+.18*Math.sin(G.t*.24);
+    ctx.fillStyle='#ff3b2f'; ctx.fillRect(0,0,wv*val/100,18); ctx.restore();
+  }
+  ctx.strokeStyle='#e0b35255'; ctx.lineWidth=1;
+  for(let i=1;i<10;i++){ ctx.beginPath(); ctx.moveTo(wv*i/10,0); ctx.lineTo(wv*i/10,18); ctx.stroke(); }
+  ctx.restore();
+  ctx.save(); ctx.textAlign=mir?'right':'left';
+  ctx.font='700 15px "PingFang SC",sans-serif'; ctx.fillStyle='#efe9e2';
+  ctx.fillText(name+'  '+tag,x,y+36);
+  for(let i=0;i<2;i++){
+    const px=mir?x-14-i*20:x+4+i*20;
+    ctx.beginPath(); ctx.arc(px+6,y+52,6,0,7);
+    ctx.fillStyle=i<wins?'#e0b352':'#332c3a'; ctx.fill();
+    ctx.strokeStyle='#00000088'; ctx.stroke();
+  }
+  ctx.restore();
+}
+/* 超必杀次数：3 颗珠，用一颗灭一颗（仿拳皇的必杀珠） */
+function spPips(x,y,left,mir,col,spName){
+  ctx.save(); ctx.textAlign=mir?'right':'left';
+  ctx.font='700 11px sans-serif'; ctx.fillStyle='#6d6577';
+  ctx.fillText(spName, mir?x:x, y+22);
+  const cdReady = (G.f&&(mir?G.f[1]:G.f[0])) ? (mir?G.f[1]:G.f[0]).spCD<=0 : true;
+  for(let i=0;i<3;i++){
+    const on = i<left;
+    const px = mir ? x-14-i*22 : x+14+i*22;
+    ctx.beginPath(); ctx.arc(px, y+6, 7, 0, 7);
+    if(on && cdReady){
+      const pulse = .85+.15*Math.sin(G.t*.2+i);
+      ctx.fillStyle=col; ctx.globalAlpha=pulse;
+      ctx.fill();
+      ctx.globalAlpha=1; ctx.strokeStyle='#fff8'; ctx.lineWidth=1.5; ctx.stroke();
+    } else if(on){
+      /* 有次数但CD没转好：暗色表示冷却中 */
+      ctx.fillStyle=col; ctx.globalAlpha=.28; ctx.fill();
+      ctx.globalAlpha=1; ctx.strokeStyle='#ffffff22'; ctx.lineWidth=1; ctx.stroke();
+    } else {
+      ctx.fillStyle='#1a1620'; ctx.fill();
+      ctx.strokeStyle='#ffffff18'; ctx.lineWidth=1; ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+function hud(){
+  const [a,b]=G.f;
+  bar(28,26,470,a.hp,a.disp,false,['#ffd86b','#e0912a'],a.st.name,a.st.tag,G.wins[0]);
+  bar(W-28,26,470,b.hp,b.disp,true,['#ff8a6b','#c1381f'],
+      (G.mode==='ai'?'CPU · ':'')+b.st.name,b.st.tag,G.wins[1]);
+  spPips(28,90,a.spLeft,false,'#7fd0ff',a.st.sp.name);
+  spPips(W-28,90,b.spLeft,true,'#ff9f6b',b.st.sp.name);
+  const secs=Math.max(0,Math.ceil(G.time/60));
+  ctx.save(); ctx.textAlign='center';
+  ctx.fillStyle='#000000bb'; ctx.fillRect(W/2-42,16,84,54);
+  ctx.strokeStyle='#e0b352'; ctx.lineWidth=2; ctx.strokeRect(W/2-42,16,84,54);
+  ctx.font='900 38px ui-monospace,monospace'; ctx.fillStyle=secs<=10?'#ff6b4a':'#efe9e2';
+  ctx.fillText(String(secs).padStart(2,'0'),W/2,56);
+  ctx.font='600 11px sans-serif'; ctx.fillStyle='#8b8290'; ctx.fillText('ROUND '+G.round,W/2,80);
+  ctx.fillStyle='#6d6577';
+  ctx.fillText(G.mode==='ai'?('AI · '+DIFFS[G.diff]):'双人对战',W/2,98);
+  ctx.restore();
+  if(comboUI&&comboUI.t>0){
+    ctx.save(); ctx.textAlign=comboUI.who?'right':'left';
+    ctx.translate(comboUI.who?W-40:40,140);
+    const k=1+(70-comboUI.t)*.004; ctx.scale(k,k);
+    ctx.font='900 40px "PingFang SC",sans-serif';
+    ctx.lineWidth=7; ctx.strokeStyle='#0a0709'; ctx.strokeText(comboUI.n+' 连击',0,0);
+    ctx.fillStyle='#ffe9a8'; ctx.fillText(comboUI.n+' 连击',0,0);
+    ctx.restore();
+  }
+}
+function drawBanner(){
+  if(!banner) return;
+  const inE=ease(clamp(banner.t/8,0,1)), out=clamp((84-banner.t)/14,0,1);
+  ctx.save(); ctx.textAlign='center'; ctx.translate(W/2,H*.26);
+  ctx.globalAlpha=clamp(Math.min(inE,out),0,1);
+  const s=.72+inE*.36; ctx.scale(s,s);
+  ctx.font='900 52px "PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.lineWidth=11; ctx.strokeStyle='#0a0709'; ctx.strokeText(banner.txt,0,0);
+  const g=ctx.createLinearGradient(0,-40,0,16);
+  g.addColorStop(0,'#ffffff'); g.addColorStop(.5,banner.col); g.addColorStop(1,'#ffdf9a');
+  ctx.fillStyle=g; ctx.fillText(banner.txt,0,0);
+  ctx.font='700 14px sans-serif'; ctx.fillStyle='#ffe9a8'; ctx.fillText('必 杀 技',0,27);
+  ctx.restore();
+}
+function announce(){
+  if(!G.msg||!G.msg.t) return;
+  if(G.state!=='intro'&&G.state!=='ko'&&G.state!=='over') return;
+  const e=ease(clamp(G.msgT/12,0,1));
+  ctx.save(); ctx.textAlign='center'; ctx.translate(W/2,H*.4);
+  ctx.scale(.6+e*.4,1+(1-e)*.7); ctx.globalAlpha=clamp(e*1.4,0,1);
+  ctx.font='900 84px "PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.lineWidth=12; ctx.strokeStyle='#0a0709'; ctx.strokeText(G.msg.t,0,0);
+  const g=ctx.createLinearGradient(0,-60,0,20);
+  g.addColorStop(0,'#fff6dd'); g.addColorStop(.55,'#e0b352'); g.addColorStop(1,'#a4552a');
+  ctx.fillStyle=g; ctx.fillText(G.msg.t,0,0);
+  if(G.msg.s){ ctx.font='700 20px sans-serif'; ctx.fillStyle='#8b8290'; ctx.fillText(G.msg.s,0,42); }
+  ctx.restore();
+}
+function draw(){
+  ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,W,H);
+  bg();
+  ctx.save();
+  ctx.translate(W/2+(Math.random()-.5)*G.shake, H*.56+(Math.random()-.5)*G.shake);
+  ctx.scale(G.cam.z,G.cam.z); ctx.translate(-G.cam.x,-H*.56);
+  if(G.f.length){
+    const [a,b]=G.f;
+    const threed = R3 && R3.ok && D3;
+    /* 先画投射物（飞在空中的弹幕/手枪腿），它们在角色"后面"还是"前面"
+       取决于Y坐标，但统一先画让角色永远在最上层 */
+    for(const p of PROJ) drawProj(p);
+    /* ★ 角色最后画 —— 脚永远不会被地板线/网格/影子挡住 */
+    for(const f of (a.y<=b.y?[a,b]:[b,a])){
+      if(threed){
+        /* 3D 模式：角色由 three.js（sync3D）渲染，2D 不重复画。
+           影子也交给 3D —— 如果在 2D 画椭圆影子会盖住 3D 脚部。 */
+      } else {
+        drawFighter(f);
+      }
+    }
+    for(const r of rings){ ctx.save(); ctx.globalAlpha=clamp(r.a,0,1)*.7; ctx.strokeStyle=r.c;
+      ctx.lineWidth=4; ctx.beginPath(); ctx.arc(r.x,r.y,r.cur||r.r,0,7); ctx.stroke(); ctx.restore(); }
+    /* 格挡能量盾：朝向攻击者那半边的半圆 + 径向渐变填充。
+       盾心在角色身位中心，半径随角色高度，随时间扩张+淡出。 */
+    for(const s of shields){
+      const k=s.t/s.life, R=s.h*.5*(.6+k*.5), a=(1-k)*.85;
+      const face=s.dir;   /* 盾面朝攻击者：防御者 dir 本就指向对手 */
+      ctx.save(); ctx.globalAlpha=a;
+      ctx.translate(s.x,s.y); ctx.scale(face,1);   /* 镜像到面向攻击者那一侧 */
+      const g=ctx.createRadialGradient(R*.5,0,2,0,0,R);
+      g.addColorStop(0,'rgba(255,255,255,.55)');
+      g.addColorStop(.45,s.col);
+      g.addColorStop(1,'rgba(159,216,255,0)');
+      ctx.fillStyle=g; ctx.beginPath();
+      ctx.arc(0,0,R,-1.1,1.1); ctx.lineTo(0,0); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle='#e6f7ff'; ctx.lineWidth=2.5; ctx.globalAlpha=a*.9;
+      ctx.beginPath(); ctx.arc(0,0,R,-1.1,1.1); ctx.stroke();
+      ctx.restore();
+    }
+    for(const e of dusts){ ctx.save(); ctx.globalAlpha=e.a*.5; ctx.fillStyle='#c9b79a';
+      ctx.beginPath(); ctx.arc(e.x,e.y,e.r,0,7); ctx.fill(); ctx.restore(); }
+    for(const e of spk){ ctx.save(); ctx.globalAlpha=e.a; ctx.strokeStyle=e.c; ctx.lineWidth=2.6;
+      ctx.beginPath(); ctx.moveTo(e.x,e.y); ctx.lineTo(e.x-e.vx*1.6,e.y-e.vy*1.6); ctx.stroke(); ctx.restore(); }
+    for(const e of pops){ const k=clamp(e.s,0,1);
+      ctx.save(); ctx.globalAlpha=e.a; ctx.translate(e.x,e.y); ctx.scale(.5+ease(k)*.8,.5+ease(k)*.8);
+      ctx.font='900 46px "PingFang SC",sans-serif'; ctx.textAlign='center';
+      ctx.lineWidth=8; ctx.strokeStyle='#0a0709'; ctx.strokeText(e.txt,0,0);
+      ctx.fillStyle=e.c; ctx.fillText(e.txt,0,0); ctx.restore(); }
+    for(const e of dmgNums){ ctx.save(); ctx.globalAlpha=e.a; ctx.translate(e.x,e.y);
+      ctx.font='900 26px ui-monospace,monospace'; ctx.textAlign='center';
+      ctx.lineWidth=5; ctx.strokeStyle='#0a0709'; ctx.strokeText(e.txt,0,0);
+      ctx.fillStyle='#fff2c8'; ctx.fillText(e.txt,0,0); ctx.restore(); }
+  }
+  ctx.restore();
+  if(flash>.01){ ctx.fillStyle=`rgba(255,245,225,${flash*.8})`; ctx.fillRect(0,0,W,H); }
+  const vg=ctx.createRadialGradient(W/2,H*.5,H*.3,W/2,H*.5,H*.95);
+  vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.6)');
+  ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+  /* 残血红晕 */
+  if(G.f.length&&G.f.some(f=>!f.dead&&f.hp<25)){
+    const rv=ctx.createRadialGradient(W/2,H*.5,H*.35,W/2,H*.5,H*.8);
+    rv.addColorStop(0,'rgba(0,0,0,0)'); rv.addColorStop(1,'rgba(190,30,20,'+(.10+.06*Math.sin(G.t*.16))+')');
+    ctx.fillStyle=rv; ctx.fillRect(0,0,W,H);
+  }
+  if(G.state!=='menu'&&G.state!=='select'&&G.f.length) hud();
+  /* 开局按键提示：1P 按键贴左边、2P/CPU 贴右边，淡入淡出不过分显眼 */
+  if(G.hintT>0 && G.f.length){
+    const a=Math.min(.5, G.hintT/55*.5);   /* 最高 50% 透明度，够低调 */
+    ctx.save(); ctx.globalAlpha=a; ctx.textAlign='left';
+    ctx.font='600 13px ui-monospace,monospace';
+    const L=ctx.measureText('A D 移动').width;
+    /* 1P 按键：左边，1P 角色起始在左 */
+    ctx.fillStyle='#e8d9a8'; ctx.textAlign='left';
+    ctx.fillText('1P  A D 移动  W 跳  S 蹲', 16, H*.5-14);
+    ctx.fillText('F G V 攻击  R 防御  T 必杀', 16, H*.5+6);
+    ctx.font='500 11px ui-monospace,monospace'; ctx.fillStyle='#6d6577';
+    ctx.fillText('A+S 蹲防 / 出招中 A 招架', 16, H*.5+24);
+    /* 2P 按键：右边。AI 模式显示 CPU，2P 模式显示 2P 键 */
+    ctx.textAlign='right';
+    if(G.mode==='ai'){
+      ctx.fillStyle='#d8a8a8'; ctx.fillText('CPU', W-16, H*.5-14);
+    } else {
+      ctx.fillStyle='#a8c8e8';
+      ctx.fillText('← → 移动  ↑ 跳  ↓ 蹲', W-16, H*.5-14);
+      ctx.fillText('1 2 3 攻击  0 防御  . 必杀', W-16, H*.5+6);
+      ctx.font='500 11px ui-monospace,monospace'; ctx.fillStyle='#6d6577';
+      ctx.fillText('←+↓ 蹲防 / 出招中 ← 招架', W-16, H*.5+24);
+    }
+    ctx.restore();
+  }
+  drawBanner();
+  announce();
+  if(toastEl&&toastT>0){
+    toastT--;
+    ctx.save(); ctx.globalAlpha=clamp(toastT/30,0,1);
+    ctx.font='600 14px sans-serif'; ctx.textAlign='center';
+    const tw=ctx.measureText(toastEl).width+28;
+    ctx.fillStyle='#000000cc'; ctx.fillRect(W/2-tw/2,H-46,tw,30);
+    ctx.strokeStyle='#e0b352'; ctx.lineWidth=1; ctx.strokeRect(W/2-tw/2,H-46,tw,30);
+    ctx.fillStyle='#efe9e2'; ctx.fillText(toastEl,W/2,H-26); ctx.restore();
+  }
+}
+let last=performance.now(), acc=0;
+function loop(now){
+  const raw=Math.min(50,now-last); last=now;
+  acc+=raw*(G.state==='pause'?0:G.slow);
+  let n=0;
+  while(acc>=16.667 && n<4){ tick(); acc-=16.667; n++; }
+  draw();
+  requestAnimationFrame(loop);
+}
+
+/* ---------------- 选人 ---------------- */
+const SEL={who:0, cur:[0,1], locked:[false,false], picked:[false,false], mode:'2p'};
+function buildCards(){
+  const row=$('pcRow'); row.innerHTML='';
+  ROSTER.forEach((r,i)=>{
+    const d=document.createElement('div'); d.className='pc'; d.dataset.i=i;
+    /* 三条属性条：速度 / 力量 / 必杀 */
+    const nv=(v,a,b)=>Math.round(clamp((v-a)/(b-a),0,1)*100);
+    d.innerHTML=`<span class="badge"></span><span class="lk">🔒</span>
+      <canvas width="120" height="130"></canvas>
+      <div class="n">${r.name}</div><div class="s">${r.sp.name}</div><div class="t">${r.tip}</div>
+      <div class="stat" title="速度 / 力量 / 必杀">
+        <b><i style="width:${nv(r.spd,2.6,3.4)}%"></i></b>
+        <b><i style="width:${nv(r.pow,.85,1.35)}%"></i></b>
+        <b><i style="width:${Math.round(15+85*clamp((r.sp.dmg-11)/19,0,1))}%"></i></b></div>
+      <div class="req"></div>`;
+    d.onclick=()=>{
+      if(!unlocked(i)){ toast('未解锁 · '+reqText(i)); return; }
+      SEL.cur[SEL.who]=i;
+      if(SEL.who===1||SEL.mode==='ai') confirmPick(); else { SFX.pick(); paintCards(); }
+    };
+    d.ondragover=e=>{e.preventDefault();d.style.borderColor='#e0b352';};
+    d.ondragleave=()=>d.style.borderColor='';
+    d.ondrop=e=>{e.preventDefault();d.style.borderColor='';
+      const f=e.dataTransfer.files[0]; if(f&&f.type.startsWith('image')) replaceChar(i,f);};
+    row.appendChild(d);
+  });
+  paintCards();
+}
+function paintCards(){
+  document.querySelectorAll('.pc').forEach(d=>{
+    const i=+d.dataset.i, r=ROSTER[i], ok=unlocked(i);
+    d.classList.toggle('lock',!ok);
+    d.querySelector('.req').textContent = ok?'':('🔒 '+reqText(i));
+    /* picked 才是"已经定下来了"，locked 会在等 2P 时临时清掉，
+       所以 1P 选完轮到 2P 时，1P 那张卡不能跟着变灰 */
+    const showA = SEL.picked[0] || (!SEL.picked[1] && SEL.who===0);
+    const showB = SEL.picked[1] || (SEL.picked[0] && SEL.who===1);
+    d.classList.toggle('c1',ok&&showA&&SEL.cur[0]===i);
+    d.classList.toggle('c2',ok&&showB&&SEL.cur[1]===i);
+    d.classList.toggle('both',ok&&showA&&showB&&SEL.cur[0]===i&&SEL.cur[1]===i);
+    const bd=d.querySelector('.badge');
+    const a=ok&&showA&&SEL.cur[0]===i, b=ok&&showB&&SEL.cur[1]===i;
+    bd.textContent=(a?'1P':'')+(a&&b?' / ':'')+(b?'2P':'');
+    const c=d.querySelector('canvas'), g=c.getContext('2d');
+    g.clearRect(0,0,c.width,c.height);
+    const sp=SPR[i];
+    if(sp){ const s=Math.min(c.width/sp.w,c.height/sp.h)*.94;
+      g.save(); if(sp.additive) g.globalCompositeOperation='lighter';
+      g.drawImage(sp.canvas,(c.width-sp.w*s)/2,(c.height-sp.h*s)/2,sp.w*s,sp.h*s); g.restore(); }
+    else { g.fillStyle='#4a4155'; g.font='11px sans-serif'; g.textAlign='center';
+      g.fillText(r.name,c.width/2,c.height/2); }
+  });
+  $('selWho').textContent = SEL.mode==='ai'
+    ? (SEL.picked[0]?'CPU 抽取中…':'1P 选择')
+    : (SEL.picked[0]&&!SEL.picked[1]?'2P 选择':(SEL.picked[1]?'准备开打！':'1P 选择'));
+}
+function selectKeys(code){
+  if(SEL.who>1) return;
+  const k=KEYMAP[SEL.who];
+  const L=list(k.l), R=list(k.r), OK=list(k.lp).concat(list(k.sp));
+  const pool=unlockedIds();
+  const step=dir=>{
+    if(!pool.length) return;
+    let c=pool.indexOf(SEL.cur[SEL.who]); if(c<0) c=0;
+    SEL.cur[SEL.who]=pool[(c+dir+pool.length)%pool.length];
+    SFX.ui();
+  };
+  if(L.includes(code)) step(-1);
+  if(R.includes(code)) step(1);
+  if(OK.includes(code) && pool.includes(SEL.cur[SEL.who])) confirmPick();
+  paintCards();
+}
+function confirmPick(){
+  const who=SEL.who;
+  if(!unlocked(SEL.cur[who])){ toast('未解锁 · '+reqText(SEL.cur[who])); return; }
+  SFX.pick();
+  SEL.picked[who]=true; SEL.locked[who]=true;
+  if(who===0){
+    if(SEL.mode==='ai'){
+      /* CPU 在所有角色中随机抽（不受玩家解锁进度限制），且尽量不和自己撞 */
+      const pool=ROSTER.map((_,i)=>i);
+      let r; do{ r=pool[(Math.random()*pool.length)|0]; }while(pool.length>1&&r===SEL.cur[0]);
+      SEL.cur[1]=r; SEL.picked[1]=true; SEL.locked[1]=true;
+      paintCards();
+      $('selTitle').textContent='CPU 选定';
+      setTimeout(()=>{ G.pick=[SEL.cur[0],SEL.cur[1]]; beginMatch(); }, 700);
+      return;
+    }
+    SEL.who=1; paintCards();
+  } else {
+    G.pick=[SEL.cur[0],SEL.cur[1]];
+    paintCards();
+    setTimeout(beginMatch,260);
+  }
+}
+function openSelect(mode){
+  initAudio(); SFX.ui();
+  SEL.mode=mode; SEL.who=0; SEL.locked=[false,false]; SEL.picked=[false,false];
+  const pool=unlockedIds();
+  SEL.cur=[pool[0]||0, pool[1]||pool[0]||0];
+  $('selTitle').textContent='选择角色';
+  G.state='select';
+  $('menu').classList.add('hide'); $('sel').classList.remove('hide');
+  buildCards();
+}
+function beginMatch(){
+  $('sel').classList.add('hide');
+  const want=+($('diff').querySelector('.on')||{dataset:{d:'0'}}).dataset.d;
+  G.diff=diffOpen(want)?want:0;
+  G.mode=SEL.mode; G.wins=[0,0]; G.round=1; G.lastWin=-1; G.taken=[0,0];
+  if(ac){ mStep=0; mNext=ac.currentTime+.1; }
+  newRound();
+}
+/* 再来一局：沿用刚才的角色和对战模式，不用重新选人 */
+function rematch(){
+  if(!G.pick||G.pick.length<2||!ROSTER[G.pick[0]]||!ROSTER[G.pick[1]]){ backToMenu(); return; }
+  initAudio();
+  $('pause').classList.add('hide'); $('sel').classList.add('hide'); $('menu').classList.add('hide');
+  G.state='fight'; G.wins=[0,0]; G.round=1; G.lastWin=-1; G.taken=[0,0]; G.msg={t:'',s:''};
+  if(ac){ mStep=0; mNext=ac.currentTime+.1; if(ac.state==='suspended') ac.resume(); }
+  newRound();
+}
+function replaceChar(i,file){
+  const url=URL.createObjectURL(file), img=new Image();
+  img.onload=()=>{
+    const c=document.createElement('canvas'); c.width=c.height=48;
+    const g=c.getContext('2d'); g.drawImage(img,0,0,48,48);
+    const d=g.getImageData(0,0,48,48).data; let l=0,n=0;
+    for(const[x,y]of [[0,0],[47,0],[0,47],[47,47],[24,0],[24,47]]){
+      const j=(y*48+x)*4; l+=(d[j]+d[j+1]+d[j+2])/3; n++; }
+    const r=ROSTER[i];
+    r.file=url; r.crop={l:0,r:100,t:0,b:100}; r.ax=.5;
+    /* 亮底走洪水、暗底走叠加，剩下的当实景照片交给自动抠像（切不好会自动退回羽化） */
+    r.key = l/n>150 ? 'cream' : (l/n<48 ? 'dark' : 'auto');
+    loadChar(i).then(()=>{ paintCards(); toast(r.name+' 已替换'); });
+  };
+  img.src=url;
+}
+
+/* ---------------- 菜单 ---------------- */
+function togglePause(){
+  if(G.state==='pause'){ G.state=G.prev; $('pause').classList.add('hide'); if(ac)ac.resume(); }
+  else { G.prev=G.state; G.state='pause'; $('pause').classList.remove('hide'); if(ac)ac.suspend(); }
+}
+function backToMenu(){
+  G.state='menu'; G.f=[]; G.round=1; G.wins=[0,0]; G.msg={t:'',s:''};
+  $('pause').classList.add('hide'); $('sel').classList.add('hide'); $('menu').classList.remove('hide');
+}
+$('m2p').onclick=()=>openSelect('2p');
+$('mai').onclick=()=>openSelect('ai');
+$('pback').onclick=backToMenu;
+$('presume').onclick=togglePause;
+$('pretry').onclick=rematch;
+$('selOk').onclick=confirmPick;
+$('selBack').onclick=backToMenu;
+
+/* ---------------- 3D 舞台（three.js） ----------------
+   照片没有厚度，做不了真 3D 模型；但骨骼蒙皮网格本来就输出逐顶点坐标，
+   把它塞进 three.js 的网格里，人物就真的站进了 3D 空间：
+   有透视、有景深、近手远手前后层次、镜头拉近拉远是真 3D 相机在推。
+   2D 画布只留特效和 HUD，坐标映射和 3D 相机是同一套（正交对齐，误差为零）。 */
+let R3=null, D3=false;
+const BONE_Z={torso:26, head:38, armU0:-55, armF0:-88, armU1:55, armF1:88,
+              legU0:-18, legF0:-18, legU1:30, legF1:30};
+function floorTex(){
+  const c=document.createElement('canvas'); c.width=256; c.height=256;
+  const g=c.getContext('2d');
+  g.fillStyle='#1d1520'; g.fillRect(0,0,256,256);
+  for(let i=0;i<8;i++){ g.fillStyle=i%2?'#221926':'#191218';
+    g.fillRect(0,i*32,256,30);
+    g.fillStyle='#e0b35214'; g.fillRect(0,i*32,256,2); }
+  for(let i=0;i<60;i++){ g.fillStyle='rgba(255,240,210,'+(Math.random()*.05)+')';
+    g.fillRect(Math.random()*256, Math.random()*256, 2, 2); }
+  return c;
+}
+function wallTex(){
+  const c=document.createElement('canvas'); c.width=1024; c.height=512;
+  const g=c.getContext('2d');
+  const wg=g.createLinearGradient(0,0,0,512);
+  wg.addColorStop(0,'#0d0a12'); wg.addColorStop(.62,'#1a1220'); wg.addColorStop(.66,'#241a26'); wg.addColorStop(1,'#151019');
+  g.fillStyle=wg; g.fillRect(0,0,1024,512);
+  for(let i=0;i<7;i++){ const x=40+i*150;                       /* 立柱 */
+    g.fillStyle='#0f0b14'; g.fillRect(x,0,34,330);
+    g.fillStyle='#e0b35226'; g.fillRect(x+2,0,3,330); }
+  g.fillStyle='#120d17';                                         /* 观众席剪影 */
+  for(let i=0;i<90;i++){ const x=(i*53)%1024, y=346+((i*29)%26);
+    g.beginPath(); g.arc(x,y,15+((i*7)%6),0,7); g.fill();
+    g.fillRect(x-16,y,32,40); }
+  g.fillStyle='#e0b35230'; g.fillRect(0,332,1024,4);
+  g.font='900 90px "PingFang SC",sans-serif'; g.textAlign='center';
+  g.fillStyle='rgba(224,179,82,.16)'; g.fillText('子 豪 快 打',512,150);
+  g.font='700 26px sans-serif'; g.fillStyle='rgba(224,179,82,.22)';
+  g.fillText('Z I H A O   F I G H T',512,195);
+  return c;
+}
+function init3D(){
+  if(R3||!window.THREE) return;
+  try{
+    const cv=document.createElement('canvas'); cv.id='game3d';
+    document.querySelector('.box').insertBefore(cv, document.getElementById('game'));
+    const ren=new THREE.WebGLRenderer({canvas:cv, antialias:true});
+    ren.setSize(1280,720,false);
+    const scene=new THREE.Scene();
+    scene.background=new THREE.Color(0x0a0810);
+    scene.fog=new THREE.Fog(0x0a0810, 2600, 6500);
+    const cam=new THREE.PerspectiveCamera(40, 1280/720, 1, 8000);
+    const ft=new THREE.CanvasTexture(floorTex()); ft.wrapS=ft.wrapT=THREE.RepeatWrapping; ft.repeat.set(8,4);
+    const floor=new THREE.Mesh(new THREE.PlaneGeometry(7000,2600), new THREE.MeshBasicMaterial({map:ft}));
+    floor.rotation.x=-Math.PI/2; floor.position.set(640,-203,900); scene.add(floor);
+    const wall=new THREE.Mesh(new THREE.PlaneGeometry(5200,1900), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(wallTex())}));
+    wall.position.set(640, 320, -1400); scene.add(wall);
+    const fm=[0,1].map(()=>({mesh:null,sp:null,pos:null}));
+    R3={ren,scene,cam,fm,ok:true};
+  }catch(e){ R3={ok:false}; }
+}
+function ensureFighterMesh(i,sp){
+  const e=R3.fm[i];
+  if(e.sp===sp) return e;
+  if(e.mesh){ R3.scene.remove(e.mesh); e.mesh.geometry.dispose(); e.mesh.material.dispose(); }
+  const V=sp.rig.V, T=sp.rig.T;
+  const pos=new Float32Array(V.length*3), uv=new Float32Array(V.length*2);
+  for(let k=0;k<V.length;k++){ uv[k*2]=V[k].x/sp.w; uv[k*2+1]=1-V[k].y/sp.h; }
+  const idx=new Uint16Array(T.length*3);
+  T.forEach((t,k)=>{ idx[k*3]=t[0]; idx[k*3+1]=t[2]; idx[k*3+2]=t[1]; });
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  g.setAttribute('uv', new THREE.BufferAttribute(uv,2));
+  g.setIndex(new THREE.BufferAttribute(idx,1));
+  const tex=new THREE.CanvasTexture(sp.canvas);
+  const mesh=new THREE.Mesh(g, new THREE.MeshBasicMaterial({map:tex, transparent:true,
+    side:THREE.DoubleSide, alphaTest:.02}));
+  mesh.frustumCulled=false;   /* 第一帧位置还是全 0，包围球会在原点，不关剔除人物会被永久裁没 */
+  R3.scene.add(mesh);
+  e.mesh=mesh; e.sp=sp; e.pos=pos; e.geo=g;
+  return e;
+}
+function sync3D(){
+  if(!R3||!R3.ok) return;
+  const D=989/Math.max(.3,G.cam.z);          /* 和 2D 相机同缩放：k = (H/2)/tan(fov/2)/D */
+  R3.cam.position.set(G.cam.x, 0, D);
+  R3.cam.lookAt(G.cam.x, 0, 0);
+  for(let i=0;i<2;i++){
+    const f=G.f[i], e=R3.fm[i];
+    const sp=f?SPR[f.ri]:null;
+    if(!f||!sp||!sp.rig||G.state==='menu'){ if(e.mesh) e.mesh.visible=false; continue; }
+    ensureFighterMesh(i,sp);
+    e.mesh.visible=true;
+    const P=f.pose(), A=bonePose(f,P,sp.rig), M=boneMatrices(sp.rig,A);
+    const s=(f.h*P.sy)/sp.h;
+    for(let v=0;v<sp.rig.V.length;v++){
+      const vt=sp.rig.V[v];
+      let X=0,Y=0,Z=0;
+      for(let k2=0;k2<vt.wt.length;k2++){
+        const w=vt.wt[k2], m=M[w.n];
+        X += (m[0]*vt.x + m[2]*vt.y + m[4])*w.w;
+        Y += (m[1]*vt.x + m[3]*vt.y + m[5])*w.w;
+        Z += (BONE_Z[w.n]||0)*w.w;
+      }
+      let t3x = f.x + f.dir*((X - sp.ax*sp.w)*s)*P.sx;
+      let t3y = -(f.y + (vt.y-sp.h)*s*P.sy + A.hipDrop*f.h - 403);
+      { /* 位移钳制（和 2D drawMesh 一致） */
+        const r3x = ((X - sp.ax*sp.w)*s) - ((vt.x - sp.ax*sp.w)*s);
+        const r3y = ((vt.y-sp.h)*s) - ((vt.y-sp.h)*s);
+        const maxD3 = f.h * (f.mv ? .35 : .15);
+        const d3 = Math.hypot(r3x, (Y-vt.y)*s);
+        if(d3 > maxD3){ const k3 = maxD3 / d3; t3x -= f.dir*r3x*(1-k3); t3y += r3y*(1-k3); }
+      }
+      e.pos[v*3]   = t3x;
+      e.pos[v*3+1] = t3y;
+      e.pos[v*3+2] = Z;
+    }
+    e.geo.attributes.position.needsUpdate=true;
+  }
+  R3.ren.render(R3.scene,R3.cam);
+}
+function set3D(v){
+  D3=v; PROG.d3=v; save();
+  if(v){ init3D();
+    if(!R3.ok){ D3=false; PROG.d3=false; save(); toast('这台设备开不了 3D'); }
+    else { $('b3d').textContent='🧊 3D 舞台：开'; document.getElementById('game').style.background='transparent'; toast('3D 舞台：人物进了真 3D 空间'); }
+  } else { $('b3d').textContent='🧊 3D 舞台：关'; document.getElementById('game').style.background=''; toast('回到 2D 舞台'); }
+}
+
+/* ---------------- 设置：音量 / 静音 / 全屏 ---------------- */
+function muteLabel(){ $('bmute').textContent = MUTED?'🔇 已静音':'🔊 音效开'; }
+function setMute(v){ MUTED=v; PROG.muted=v; save(); applyVol(); muteLabel(); }
+function setVol(v){ VOL=clamp(v,0,1); PROG.vol=VOL; if(VOL>0) MUTED=false, PROG.muted=false;
+  $('vol').value=Math.round(VOL*100); save(); applyVol(); muteLabel(); }
+$('vol').value=Math.round(VOL*100);
+$('vol').oninput=()=>setVol(+$('vol').value/100);
+$('bmute').onclick=()=>{ initAudio(); setMute(!MUTED); };
+$('b3d').onclick=()=>{ set3D(!D3); };
+$('bfull').onclick=()=>{
+  const el=document.querySelector('.box');
+  if(document.fullscreenElement) document.exitFullscreen();
+  else if(el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+};
+
+/* ---------------- 触屏手柄 ---------------- */
+/* 直接往 keys/pressed 里塞 1P 的键码，等于多了一套虚拟键盘，不用改任何战斗逻辑 */
+const TKEY={l:'KeyA',r:'KeyD',u:'KeyW',d:'KeyS',lp:'KeyF',hp:'KeyG',k:'KeyV',bl:'KeyR',sp:'KeyT'};
+(function wireTouch(){
+  const layer=$('touch');
+  if(matchMedia('(pointer:coarse)').matches) layer.classList.add('on');
+  layer.querySelectorAll('button[data-k]').forEach(b=>{
+    const c=TKEY[b.dataset.k];
+    const on=e=>{ e.preventDefault(); initAudio();
+      if(ac&&ac.state==='suspended') ac.resume();
+      if(!keys.has(c)) pressed.add(c);
+      keys.add(c); b.classList.add('act'); };
+    const off=e=>{ if(e)e.preventDefault(); keys.delete(c); b.classList.remove('act'); };
+    b.addEventListener('pointerdown',on);
+    b.addEventListener('pointerup',off);
+    b.addEventListener('pointercancel',off);
+    b.addEventListener('lostpointercapture',off);
+  });
+  $('tpause').onclick=()=>{ if(G.state!=='menu'&&G.state!=='select') togglePause(); };
+})();
+document.querySelectorAll('#diff button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#diff button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); initAudio(); SFX.ui();
+});
+addEventListener('dragover',e=>e.preventDefault());
+addEventListener('drop',e=>{
+  e.preventDefault();
+  if(e.target.closest&&e.target.closest('.pc')) return;
+  const f=[...e.dataTransfer.files].find(x=>x.type.startsWith('image'));
+  if(f&&G.state!=='menu') replaceChar(G.f.length?G.f[0].ri:0,f);
+});
+
+(async()=>{
+  refreshMenu(); muteLabel();
+  if(PROG.d3){ set3D(true); }
+  await Promise.all(ROSTER.map((_,i)=>loadChar(i)));
+  const bad=ROSTER.filter((_,i)=>!SPR[i]).map(r=>r.name);
+  if(bad.length) toast('缺图：'+bad.join('、')+'（拖图片到卡上可补）');
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
